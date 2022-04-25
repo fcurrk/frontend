@@ -6,7 +6,7 @@ import DialogActions from "@material-ui/core/DialogActions";
 import Button from "@material-ui/core/Button";
 import TextField from "@material-ui/core/TextField";
 import { FolderOpenOutlined, LabelOutlined } from "@material-ui/icons";
-//import LockIcon from "@material-ui/icons/Lock";
+import LockIcon from "@material-ui/icons/Lock";
 import PathSelector from "../FileManager/PathSelector";
 const useStyles = makeStyles((theme) => ({
     formGroup: {
@@ -36,6 +36,7 @@ export default function CreateWebDAVAccount(props) {
     const [value, setValue] = useState({
         name: "",
         path: "/",
+		password:"",
     });
     const [pathSelectDialog, setPathSelectDialog] = React.useState(false);
     const [selectedPath, setSelectedPath] = useState("");
@@ -109,7 +110,19 @@ export default function CreateWebDAVAccount(props) {
                             className={classes.input}
                             value={value.name}
                             onChange={handleInputChange("name")}
-                            label="备注名，同时也是WebDav密码,4-32位字母数字"
+                            label="备注名"
+                        />
+                    </div>
+                    <div className={classes.formGroup}>
+                        <div className={classes.formIcon}>
+                            <LockIcon />
+                        </div>
+
+                        <TextField
+                            className={classes.input}
+                            value={value.password}
+                            onChange={handleInputChange("password")}
+                            label="WebDav密码"
                         />
                     </div>
                     <div className={classes.formGroup}>

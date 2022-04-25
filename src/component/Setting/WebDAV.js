@@ -112,14 +112,14 @@ export default function WebDAV() {
         API.post("/webdav/accounts", {
             path: account.path,
             name: account.name,
-//			password: account.password,
+			password: account.password,
         })
             .then((response) => {
                 setAccounts([
                     {
                         ID: response.data.id,
-//                        Password: account.password,
-                        Password: response.data.password,
+                        Password: account.password,
+ //                       Password: response.data.password,
                         CreatedAt: response.data.created_at,
                         Name: account.name,
                         Root: account.path,
