@@ -60,13 +60,6 @@ export default function CreateWebDAVAccount(props) {
         });
     };
 
-    const handleInputPassWordChange = (password) => (e) => {
-        setValue({
-            ...value,
-            [password]: e.target.value,
-        });
-    };
-
     const selectPath = () => {
         setValue({
             ...value,
@@ -128,7 +121,7 @@ export default function CreateWebDAVAccount(props) {
                         <TextField
                             className={classes.input}
                             value={value.password}
-                            onChange={handleInputPassWordChange("password")}
+                            onChange={handleInputChange("password")}
                             label="WebDav密码"
                         />
                     </div>
