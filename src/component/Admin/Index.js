@@ -169,26 +169,6 @@ export default function Index() {
                 ToggleSnackbar("top", "right", error.message, "error");
             });
 
-        axios
-            .get("/api/v3/admin/news")
-            .then((response) => {
-                setNews(response.data.data);
-                const res = {};
-                response.data.included.forEach((v) => {
-                    if (v.type === "users") {
-                        res[v.id] = v.attributes;
-                    }
-                });
-                setNewsUsers(res);
-            })
-            .catch((error) => {
-                ToggleSnackbar(
-                    "top",
-                    "right",
-                    "Cloudreve 公告加载失败",
-                    "warning"
-                );
-            });
     }, []);
 
     return (
@@ -320,13 +300,13 @@ export default function Index() {
                     </List>
                 </Paper>
             </Grid>
-            <Grid item xs={12} md={4} lg={3}>
+            <Grid item xs={12} md={12} lg={12}>
                 <Paper>
                     <div className={classes.logoContainer}>
                         <img
-                            alt="cloudreve"
+                            alt="MINIYUN"
                             className={classes.logo}
-                            src={"/static/img/cloudreve.svg"}
+                            src={"/static/img/miniyun.svg"}
                         />
                         <div className={classes.title}>
                             <Typography className={classes.cloudreve}>
@@ -340,173 +320,6 @@ export default function Index() {
                             </Typography>
                         </div>
                     </div>
-                    <Divider />
-                    <div>
-                        <List component="nav" aria-label="main mailbox folders">
-                            <ListItem
-                                button
-                                onClick={() =>
-                                    window.open("https://cloudreve.org")
-                                }
-                            >
-                                <ListItemIcon>
-                                    <Home />
-                                </ListItemIcon>
-                                <ListItemText primary="主页" />
-                                <ListItemIcon className={classes.iconRight}>
-                                    <Launch />
-                                </ListItemIcon>
-                            </ListItem>
-                            <ListItem
-                                button
-                                onClick={() =>
-                                    window.open(
-                                        "https://github.com/cloudreve/cloudreve"
-                                    )
-                                }
-                            >
-                                <ListItemIcon>
-                                    <GitHub />
-                                </ListItemIcon>
-                                <ListItemText primary="GitHub" />
-                                <ListItemIcon className={classes.iconRight}>
-                                    <Launch />
-                                </ListItemIcon>
-                            </ListItem>
-                            <ListItem
-                                button
-                                onClick={() =>
-                                    window.open("https://docs.cloudreve.org/")
-                                }
-                            >
-                                <ListItemIcon>
-                                    <Description />
-                                </ListItemIcon>
-                                <ListItemText primary="文档" />
-                                <ListItemIcon className={classes.iconRight}>
-                                    <Launch />
-                                </ListItemIcon>
-                            </ListItem>
-                            <ListItem
-                                button
-                                onClick={() =>
-                                    window.open("https://forum.cloudreve.org")
-                                }
-                            >
-                                <ListItemIcon>
-                                    <Forum />
-                                </ListItemIcon>
-                                <ListItemText primary="讨论社区" />
-                                <ListItemIcon className={classes.iconRight}>
-                                    <Launch />
-                                </ListItemIcon>
-                            </ListItem>
-                            <ListItem
-                                button
-                                onClick={() =>
-                                    window.open(
-                                        "https://t.me/cloudreve_official"
-                                    )
-                                }
-                            >
-                                <ListItemIcon>
-                                    <Telegram />
-                                </ListItemIcon>
-                                <ListItemText primary="Telegram 群组" />
-                                <ListItemIcon className={classes.iconRight}>
-                                    <Launch />
-                                </ListItemIcon>
-                            </ListItem>
-                            <ListItem
-                                button
-                                onClick={() =>
-                                    window.open(
-                                        "https://docs.cloudreve.org/use/pro/jie-shao"
-                                    )
-                                }
-                            >
-                                <ListItemIcon style={{ color: "#ff789d" }}>
-                                    <Favorite />
-                                </ListItemIcon>
-                                <ListItemText primary="升级到捐助版" />
-                                <ListItemIcon className={classes.iconRight}>
-                                    <Launch />
-                                </ListItemIcon>
-                            </ListItem>
-                        </List>
-                    </div>
-                </Paper>
-            </Grid>
-            <Grid item xs={12} md={8} lg={9}>
-                <Paper className={classes.paper}>
-                    <List>
-                        {news &&
-                            news.map((v) => (
-                                <>
-                                    <ListItem
-                                        button
-                                        alignItems="flex-start"
-                                        onClick={() =>
-                                            window.open(
-                                                "https://forum.cloudreve.org/d/" +
-                                                    v.id
-                                            )
-                                        }
-                                    >
-                                        <ListItemAvatar>
-                                            <Avatar
-                                                alt="Travis Howard"
-                                                src={
-                                                    newsUsers[
-                                                        v.relationships
-                                                            .startUser.data.id
-                                                    ] &&
-                                                    newsUsers[
-                                                        v.relationships
-                                                            .startUser.data.id
-                                                    ].avatarUrl
-                                                }
-                                            />
-                                        </ListItemAvatar>
-                                        <ListItemText
-                                            primary={v.attributes.title}
-                                            secondary={
-                                                <React.Fragment>
-                                                    <Typography
-                                                        component="span"
-                                                        variant="body2"
-                                                        className={
-                                                            classes.inline
-                                                        }
-                                                        color="textPrimary"
-                                                    >
-                                                        {newsUsers[
-                                                            v.relationships
-                                                                .startUser.data
-                                                                .id
-                                                        ] &&
-                                                            newsUsers[
-                                                                v.relationships
-                                                                    .startUser
-                                                                    .data.id
-                                                            ].username}{" "}
-                                                    </Typography>
-                                                    发表于{" "}
-                                                    <TimeAgo
-                                                        datetime={
-                                                            v.attributes
-                                                                .startTime
-                                                        }
-                                                        locale="zh_CN"
-                                                    />
-                                                </React.Fragment>
-                                            }
-                                        />
-                                    </ListItem>
-                                    <Divider />
-                                </>
-                            ))}
-                    </List>
                 </Paper>
             </Grid>
         </Grid>

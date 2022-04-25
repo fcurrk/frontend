@@ -34,6 +34,7 @@ const useStyles = makeStyles((theme) => ({
 export default function CreateWebDAVAccount(props) {
     const [value, setValue] = useState({
         name: "",
+		password: "",
         path: "/",
     });
     const [pathSelectDialog, setPathSelectDialog] = React.useState(false);
@@ -55,6 +56,13 @@ export default function CreateWebDAVAccount(props) {
         setValue({
             ...value,
             [name]: e.target.value,
+        });
+    };
+
+    const handleInputPassWordChange = (password) => (e) => {
+        setValue({
+            ...value,
+            [password]: e.target.value,
         });
     };
 
@@ -109,6 +117,18 @@ export default function CreateWebDAVAccount(props) {
                             value={value.name}
                             onChange={handleInputChange("name")}
                             label="备注名"
+                        />
+                    </div>
+                    <div className={classes.formGroup}>
+                        <div className={classes.formIcon}>
+                            <LockIcon />
+                        </div>
+
+                        <TextField
+                            className={classes.input}
+                            value={value.password}
+                            onChange={handleInputPassWordChange("password")}
+                            label="WebDav密码"
                         />
                     </div>
                     <div className={classes.formGroup}>

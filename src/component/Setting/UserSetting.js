@@ -1011,57 +1011,6 @@ class UserSettingCompoment extends Component {
                         </div>
                     )}
 
-                    <Typography
-                        className={classes.sectionTitle}
-                        variant="subtitle2"
-                    >
-                        关于 Cloudreve
-                    </Typography>
-                    <Paper>
-                        <List className={classes.desenList}>
-                            <ListItem
-                                button
-                                onClick={() =>
-                                    window.open(
-                                        "https://github.com/cloudreve/cloudreve"
-                                    )
-                                }
-                            >
-                                <ListItemIcon className={classes.iconFix}>
-                                    <GitHub />
-                                </ListItemIcon>
-                                <ListItemText primary="GitHub 仓库" />
-
-                                <ListItemSecondaryAction
-                                    className={classes.flexContainer}
-                                >
-                                    <RightIcon
-                                        className={classes.rightIconWithText}
-                                    />
-                                </ListItemSecondaryAction>
-                            </ListItem>
-                            <Divider />
-                            <ListItem
-                                button
-                                onClick={() =>
-                                    window.open("https://cloudreve.org")
-                                }
-                            >
-                                <ListItemIcon className={classes.iconFix}>
-                                    <Home />
-                                </ListItemIcon>
-                                <ListItemText primary="主页" />
-
-                                <ListItemSecondaryAction
-                                    className={classes.flexContainer}
-                                >
-                                    <RightIcon
-                                        className={classes.rightIconWithText}
-                                    />
-                                </ListItemSecondaryAction>
-                            </ListItem>
-                        </List>
-                    </Paper>
 
                     <div className={classes.paddingBottom}></div>
                 </div>

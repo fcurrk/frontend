@@ -326,7 +326,7 @@ export default function Dashboard({ content }) {
                         <MenuIcon />
                     </IconButton>
                     <Typography variant="h6" className={classes.title} noWrap>
-                        Cloudreve 仪表盘
+                        仪表盘
                     </Typography>
                     <UserAvatar />
                 </Toolbar>
