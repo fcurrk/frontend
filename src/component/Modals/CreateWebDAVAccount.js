@@ -6,6 +6,7 @@ import DialogActions from "@material-ui/core/DialogActions";
 import Button from "@material-ui/core/Button";
 import TextField from "@material-ui/core/TextField";
 import { FolderOpenOutlined, LabelOutlined } from "@material-ui/icons";
+import LockIcon from "@material-ui/icons/Lock";
 import PathSelector from "../FileManager/PathSelector";
 const useStyles = makeStyles((theme) => ({
     formGroup: {
