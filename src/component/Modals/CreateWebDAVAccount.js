@@ -151,7 +151,7 @@ export default function CreateWebDAVAccount(props) {
             <DialogActions>
                 <Button onClick={props.onClose}>取消</Button>
                 <Button
-                    disabled={value.path === "" || value.name === "" }
+                    disabled={value.path === "" || value.name === ""}
                     color="primary"
                     onClick={() => props.callback(value)}
                 >
