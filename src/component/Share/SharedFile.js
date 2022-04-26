@@ -201,6 +201,13 @@ class SharedFileCompoment extends Component {
                         encodeURIComponent(this.props.share.source.name)
                 );
                 return;
+            case "epub":
+                this.props.history.push(
+                    this.props.share.key +
+                        "/epub?name=" +
+                        encodeURIComponent(this.props.share.source.name)
+                );
+                return;
             default:
                 this.props.toggleSnackbar(
                     "top",
@@ -210,10 +217,6 @@ class SharedFileCompoment extends Component {
                 );
                 return;
         }
-    };
-
-    scoreHandler = (callback) => (event) => {
-        this.props.trySharePurchase(this.props.share).then(() => callback());
     };
 
     componentWillUnmount() {
@@ -259,7 +262,7 @@ class SharedFileCompoment extends Component {
                                 <Button
                                     variant="outlined"
                                     color="secondary"
-                                    onClick={this.scoreHandler(this.preview)}
+                                    onClick={this.scoreHandle(this.preview)}
                                     disabled={this.state.loading}
                                 >
                                     预览
