@@ -122,7 +122,7 @@ export default function CreateWebDAVAccount(props) {
                             className={classes.input}
                             value={value.password}
                             onChange={handleInputChange("password")}
-                            label="WebDav密码"
+                            label="WebDav密码(4-16位)"
                         />
                     </div>
                     <div className={classes.formGroup}>
@@ -151,7 +151,7 @@ export default function CreateWebDAVAccount(props) {
             <DialogActions>
                 <Button onClick={props.onClose}>取消</Button>
                 <Button
-                    disabled={value.path === "" || value.name === ""}
+                    disabled={value.path === "" || value.name === "" || utf8.RuneCountInString(value.password)>3 }
                     color="primary"
                     onClick={() => props.callback(value)}
                 >
