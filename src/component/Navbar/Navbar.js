@@ -58,7 +58,6 @@ import {
     openRenameDialog,
     openShareDialog,
     saveFile,
-    searchMyFile,
     setSelectedTarget,
     setSessionStatus,
     showImgPreivew,
@@ -78,11 +77,12 @@ const mapStateToProps = (state) => {
         withFolder: state.explorer.selectProps.withFolder,
         withFile: state.explorer.selectProps.withFile,
         path: state.navigator.path,
-        keywords: state.explorer.keywords,
         title: state.siteConfig.title,
         subTitle: state.viewUpdate.subTitle,
         loadUploader: state.viewUpdate.loadUploader,
         isLogin: state.viewUpdate.isLogin,
+        shareInfo: state.viewUpdate.shareInfo,
+        registerEnabled: state.siteConfig.registerEnabled,
         audioPreviewPlayingName: state.explorer.audioPreview.playingName,
         audioPreviewIsOpen: state.explorer.audioPreview.isOpen,
     };
@@ -104,9 +104,6 @@ const mapDispatchToProps = (dispatch) => {
         },
         changeContextMenu: (type, open) => {
             dispatch(changeContextMenu(type, open));
-        },
-        searchMyFile: (keywords) => {
-            dispatch(searchMyFile(keywords));
         },
         saveFile: () => {
             dispatch(saveFile());
@@ -333,11 +330,11 @@ class NavbarCompoment extends Component {
     };
 
     openDownload = () => {
-        this.props.startDownload(window.shareInfo, this.props.selected[0]);
+        this.props.startDownload(this.props.shareInfo, this.props.selected[0]);
     };
 
     archiveDownload = (e) => {
-        this.props.startBatchDownload(window.shareInfo);
+        this.props.startBatchDownload(this.props.shareInfo);
     };
 
     signOut = () => {
@@ -498,16 +495,20 @@ class NavbarCompoment extends Component {
                             </ListItemIcon>
                             <ListItemText primary="登录" />
                         </ListItem>
-                        <ListItem
-                            button
-                            key="注册"
-                            onClick={() => this.props.history.push("/signup")}
-                        >
-                            <ListItemIcon>
-                                <AccountPlus className={classes.iconFix} />
-                            </ListItemIcon>
-                            <ListItemText primary="注册" />
-                        </ListItem>
+                        {this.props.registerEnabled && (
+                            <ListItem
+                                button
+                                key="注册"
+                                onClick={() =>
+                                    this.props.history.push("/signup")
+                                }
+                            >
+                                <ListItemIcon>
+                                    <AccountPlus className={classes.iconFix} />
+                                </ListItemIcon>
+                                <ListItemText primary="注册" />
+                            </ListItem>
+                        )}
                     </div>
                 )}
             </div>
@@ -632,7 +633,8 @@ class NavbarCompoment extends Component {
                                                         color="inherit"
                                                         onClick={() =>
                                                             this.props.openPreview(
-                                                                window.shareInfo
+                                                                this.props
+                                                                    .shareInfo
                                                             )
                                                         }
                                                     >
@@ -795,8 +797,10 @@ class NavbarCompoment extends Component {
 
                         {this.props.selected.length === 0 && <UserAvatar />}
                         {this.props.selected.length === 0 &&
-                            isHomePage &&
-                            pathHelper.isMobile() && <SubActions inherit />}
+                            pathHelper.isMobile() &&
+                            (isHomePage || this.props.shareInfo) && (
+                                <SubActions inherit />
+                            )}
                     </Toolbar>
                 </AppBar>
                 <Uploader />

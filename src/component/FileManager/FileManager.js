@@ -10,8 +10,38 @@ import Explorer from "./Explorer";
 import Modals from "./Modals";
 import Navigator from "./Navigator/Navigator";
 import SideDrawer from "./Sidebar/SideDrawer";
-import { closeAllModals, navigateTo, setSelectedTarget, toggleSnackbar } from "../../redux/explorer";
+import classNames from "classnames";
+import {
+    closeAllModals,
+    navigateTo,
+    setSelectedTarget,
+    toggleSnackbar,
+} from "../../redux/explorer";
+import PaginationFooter from "./Pagination";
+import withStyles from "@material-ui/core/styles/withStyles";
 
+const styles = (theme) => ({
+    root: {
+        display: "flex",
+        flexDirection: "column",
+        height: "calc(100vh - 64px)",
+        [theme.breakpoints.down("xs")]: {
+            height: "100%",
+        },
+    },
+    rootShare: {
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        minHeight: 500,
+    },
+    explorer: {
+        display: "flex",
+        flexDirection: "column",
+        overflowY: "auto",
+        minHeight: 500,
+    },
+});
 
 const mapStateToProps = () => ({});
 
@@ -52,15 +82,25 @@ class FileManager extends Component {
         }
     }
     render() {
+        const { classes } = this.props;
         return (
-            <div>
+            <div
+                className={classNames({
+                    [classes.rootShare]: this.props.share,
+                    [classes.root]: !this.props.share,
+                })}
+            >
                 <DndProvider backend={HTML5Backend}>
                     <Modals share={this.props.share} />
                     <Navigator
                         isShare={this.props.isShare}
                         share={this.props.share}
                     />
-                    <Explorer share={this.props.share} />
+                    <div className={classes.explorer} id={"explorer-container"}>
+                        <Explorer share={this.props.share} />
+                        <PaginationFooter />
+                    </div>
+
                     <DragLayer />
                 </DndProvider>
                 <SideDrawer />
@@ -74,4 +114,4 @@ FileManager.propTypes = {};
 export default connect(
     mapStateToProps,
     mapDispatchToProps
-)(withRouter(FileManager));
+)(withStyles(styles)(withRouter(FileManager)));

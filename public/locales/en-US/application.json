@@ -1,0 +1,29 @@
+{
+  "login": {
+    "email": "Email",
+    "password": "Password",
+    "captcha": "CAPTCHA",
+    "captchaError": "Cannot load CAPTCHA: {{message}}",
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "signUpAccount": "Sign up",
+    "useFIDO2": "Use Hardware Authenticator",
+    "usePassword": "Use Password",
+    "forgetPassword": "Forgot password?",
+    "2FA": "2FA Verification",
+    "input2FACode": "Please enter the six-digit 2FA verification code",
+    "passwordNotMatch": "Those passwords didn’t match.",
+    "findMyPassword": "Find my password",
+    "passwordReset": "Password has been reset.",
+    "newPassword": "New password",
+    "repeatNewPassword": "Repeat the password",
+    "resetPassword": "Reset my password",
+    "backToSingIn": "Back to sign in",
+    "sendMeAnEmail": "Send me an email",
+    "resetEmailSent": "An email has been sent, please pay attention to check.",
+    "browserNotSupport": "Not supported by current browser or environment.",
+    "success": "Sign in successful",
+    "title": "Sign in to {{title}}",
+    "continue": "Next"
+  }
+}

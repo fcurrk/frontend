@@ -28,7 +28,7 @@ export interface ViewUpdateState {
         music: boolean;
         remoteDownload: boolean;
         torrentDownload: boolean;
-        getSource: boolean;
+        getSource: string;
         copy: boolean;
         resave: boolean;
         compress: boolean;
@@ -54,8 +54,13 @@ export interface ViewUpdateState {
         msg: string;
         color: string;
     };
+    pagination: {
+        page: number;
+        size: number;
+    };
     openFileSelector: number;
     openFolderSelector: number;
+    shareInfo: any;
 }
 export const initState: ViewUpdateState = {
     // 是否登录
@@ -84,7 +89,7 @@ export const initState: ViewUpdateState = {
         music: false,
         remoteDownload: false,
         torrentDownload: false,
-        getSource: false,
+        getSource: "",
         copy: false,
         resave: false,
         compress: false,
@@ -99,8 +104,13 @@ export const initState: ViewUpdateState = {
         msg: "",
         color: "",
     },
+    pagination: {
+        page: 1,
+        size: Auth.GetPreferenceWithDefault("pagination", 100),
+    },
     openFileSelector: 0,
     openFolderSelector: 0,
+    shareInfo: null,
 };
 const viewUpdate = (state: ViewUpdateState = initState, action: AnyAction) => {
     switch (action.type) {
@@ -217,7 +227,7 @@ const viewUpdate = (state: ViewUpdateState = initState, action: AnyAction) => {
         case "OPEN_GET_SOURCE_DIALOG":
             return Object.assign({}, state, {
                 modals: Object.assign({}, state.modals, {
-                    getSource: true,
+                    getSource: action.source,
                 }),
                 contextOpen: false,
             });
@@ -252,7 +262,7 @@ const viewUpdate = (state: ViewUpdateState = initState, action: AnyAction) => {
                     music: false,
                     remoteDownload: false,
                     torrentDownload: false,
-                    getSource: false,
+                    getSource: "",
                     resave: false,
                     copy: false,
                     loading: false,
@@ -332,6 +342,16 @@ const viewUpdate = (state: ViewUpdateState = initState, action: AnyAction) => {
                 ...state,
                 openFolderSelector: state.openFolderSelector + 1,
                 contextOpen: false,
+            };
+        case "SET_PAGINATION":
+            return {
+                ...state,
+                pagination: action.pagination,
+            };
+        case "SET_SHARE_INFO":
+            return {
+                ...state,
+                shareInfo: action.shareInfo,
             };
         default:
             return state;

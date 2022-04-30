@@ -101,7 +101,6 @@ class ModalsCompoment extends Component {
         shareUrl: "",
         downloadURL: "",
         remoteDownloadPathSelect: false,
-        source: "",
         purchaseCallback: null,
     };
 
@@ -125,26 +124,6 @@ class ModalsCompoment extends Component {
                 newName: name,
             });
             return;
-        }
-        if (
-            this.props.modalsStatus.getSource !==
-                nextProps.modalsStatus.getSource &&
-            nextProps.modalsStatus.getSource === true
-        ) {
-            API.get("/file/source/" + this.props.selected[0].id)
-                .then((response) => {
-                    this.setState({
-                        source: response.data.url,
-                    });
-                })
-                .catch((error) => {
-                    this.props.toggleSnackbar(
-                        "top",
-                        "right",
-                        error.message,
-                        "error"
-                    );
-                });
         }
     };
 
@@ -467,19 +446,32 @@ class ModalsCompoment extends Component {
         e.preventDefault();
         this.props.setModalsLoading(true);
         API.post("/aria2/url", {
-            url: this.state.downloadURL,
+            url: this.state.downloadURL.split("\n"),
             dst:
                 this.state.selectedPath === "//"
                     ? "/"
                     : this.state.selectedPath,
         })
-            .then(() => {
-                this.props.toggleSnackbar(
-                    "top",
-                    "right",
-                    "任务已创建",
-                    "success"
-                );
+            .then((response) => {
+                const failed = response.data
+                    .filter((r) => r.code !== 0)
+                    .map((r) => (r.msg + r.error ? r.error : ""));
+                if (failed.length > 0) {
+                    this.props.toggleSnackbar(
+                        "top",
+                        "right",
+                        `${failed.length} 个任务创建失败：${failed.join(",")}`,
+                        "warning"
+                    );
+                } else {
+                    this.props.toggleSnackbar(
+                        "top",
+                        "right",
+                        "任务已创建",
+                        "success"
+                    );
+                }
+
                 this.onClose();
                 this.props.setModalsLoading(false);
             })
@@ -524,7 +516,6 @@ class ModalsCompoment extends Component {
             downloadURL: "",
             shareUrl: "",
             remoteDownloadPathSelect: false,
-            source: "",
         });
         this.newNameSuffix = "";
         this.props.closeAllModals();
@@ -532,6 +523,13 @@ class ModalsCompoment extends Component {
 
     handleChange = (name) => (event) => {
         this.setState({ [name]: event.target.checked });
+    };
+
+    copySource = () => {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(this.props.modalsStatus.getSource);
+            this.props.toggleSnackbar("top", "right", "链接已复制", "info");
+        }
     };
 
     render() {
@@ -545,25 +543,27 @@ class ModalsCompoment extends Component {
                     open={this.props.modalsStatus.getSource}
                     onClose={this.onClose}
                     aria-labelledby="form-dialog-title"
+                    fullWidth
                 >
                     <DialogTitle id="form-dialog-title">
                         获取文件外链
                     </DialogTitle>
 
                     <DialogContent>
-                        <form onSubmit={this.submitCreateNewFolder}>
-                            <TextField
-                                autoFocus
-                                margin="dense"
-                                id="newFolderName"
-                                label="外链地址"
-                                type="text"
-                                value={this.state.source}
-                                fullWidth
-                            />
-                        </form>
+                        <TextField
+                            autoFocus
+                            inputProps={{ readonly: true }}
+                            label="文件外链"
+                            multiline
+                            value={this.props.modalsStatus.getSource}
+                            variant="outlined"
+                            fullWidth
+                        />
                     </DialogContent>
                     <DialogActions>
+                        <Button onClick={this.copySource} color="secondary">
+                            复制
+                        </Button>
                         <Button onClick={this.onClose}>关闭</Button>
                     </DialogActions>
                 </Dialog>
@@ -874,9 +874,10 @@ class ModalsCompoment extends Component {
                                 label="文件地址"
                                 autoFocus
                                 fullWidth
+                                multiline
                                 id="downloadURL"
                                 onChange={this.handleInputChange}
-                                placeholder="输入文件下载地址，支持 HTTP(s)/FTP/磁力链"
+                                placeholder="输入文件下载地址，一行一个，支持 HTTP(s)/FTP/磁力链"
                             />
                         </DialogContentText>
                     </DialogContent>

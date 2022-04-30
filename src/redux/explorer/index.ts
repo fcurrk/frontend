@@ -1,5 +1,6 @@
 import * as actions from "./action";
 import * as reducers from "./reducer";
+import { setPagination } from "../viewUpdate/action";
 
 export default {
     actions,
@@ -23,6 +24,14 @@ export const navigateTo = (path: any) => {
     return (dispatch: any, getState: any) => {
         const state = getState();
         const navigatorLoading = path !== state.navigator.path;
+        if (navigatorLoading) {
+            dispatch(
+                setPagination({
+                    ...state.viewUpdate.pagination,
+                    page: 1,
+                })
+            );
+        }
         dispatch(setNavigator(path, navigatorLoading));
     };
 };
@@ -33,6 +42,14 @@ export const navigateUp = () => {
         pathSplit.pop();
         const newPath = pathSplit.length === 1 ? "/" : pathSplit.join("/");
         const navigatorLoading = newPath !== state.navigator.path;
+        if (navigatorLoading) {
+            dispatch(
+                setPagination({
+                    ...state.viewUpdate.pagination,
+                    page: 1,
+                })
+            );
+        }
         dispatch(setNavigator(newPath, navigatorLoading));
     };
 };
@@ -171,9 +188,10 @@ export const openRelocateDialog = () => {
         type: "OPEN_RELOCATE_DIALOG",
     };
 };
-export const openGetSourceDialog = () => {
+export const openGetSourceDialog = (source) => {
     return {
         type: "OPEN_GET_SOURCE_DIALOG",
+        source,
     };
 };
 export const openCopyDialog = () => {
@@ -214,10 +232,11 @@ export const refreshFileList = () => {
         type: "REFRESH_FILE_LIST",
     };
 };
-export const searchMyFile = (keywords) => {
+export const searchMyFile = (keywords, path) => {
     return {
         type: "SEARCH_MY_FILE",
         keywords: keywords,
+        path: path,
     };
 };
 export const showImgPreivew = (first) => {

@@ -32,7 +32,7 @@ const useStyles = makeStyles((theme) => ({
             marginLeft: "auto",
             marginRight: "auto",
         },
-        marginBottom: 50,
+        marginBottom: 40,
     },
     editor: {
         borderRadius: "4px",
@@ -66,7 +66,7 @@ export default function CodeViewer() {
     const query = useQuery();
     const { id } = useParams();
     const theme = useTheme();
-    UseFileSubTitle(query, math, location);
+    const { title } = UseFileSubTitle(query, math, location);
 
     const dispatch = useDispatch();
     const ToggleSnackbar = useCallback(
@@ -76,10 +76,10 @@ export default function CodeViewer() {
     );
 
     useEffect(() => {
-        const extension = query.get("p").split(".");
+        const extension = title.split(".");
         setSuffix(codePreviewSuffix[extension.pop()]);
         // eslint-disable-next-line
-    }, []);
+    }, [title]);
 
     useEffect(() => {
         let requestURL = "/file/content/" + query.get("id");
@@ -171,7 +171,7 @@ export default function CodeViewer() {
                 {!loading && (
                     <Suspense fallback={<TextLoading />}>
                         <MonacoEditor
-                            height="600"
+                            height="calc(100vh - 198px)"
                             language={suffix}
                             theme={
                                 theme.palette.type === "dark" ? "vs-dark" : "vs"

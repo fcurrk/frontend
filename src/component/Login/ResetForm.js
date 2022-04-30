@@ -1,22 +1,24 @@
 import React, { useCallback, useState } from "react";
-import { useDispatch } from "react-redux";
-import { makeStyles } from "@material-ui/core";
-import { useHistory } from "react-router-dom";
-import API from "../../middleware/Api";
+import { useDispatch, useSelector } from "react-redux";
 import {
+    Avatar,
     Button,
-    FormControl,
     Divider,
-    Link,
+    FormControl,
     Input,
     InputLabel,
+    Link,
+    makeStyles,
     Paper,
-    Avatar,
     Typography,
 } from "@material-ui/core";
+import { Link as RouterLink, useHistory } from "react-router-dom";
+import API from "../../middleware/Api";
 import { useLocation } from "react-router";
 import KeyIcon from "@material-ui/icons/VpnKeyOutlined";
 import { toggleSnackbar } from "../../redux/explorer";
+import { useTranslation } from "react-i18next";
+
 const useStyles = makeStyles((theme) => ({
     layout: {
         width: "auto",
@@ -59,12 +61,16 @@ function useQuery() {
 }
 
 function ResetForm() {
+    const { t } = useTranslation();
     const query = useQuery();
     const [input, setInput] = useState({
         password: "",
         password_repeat: "",
     });
     const [loading, setLoading] = useState(false);
+    const registerEnabled = useSelector(
+        (state) => state.siteConfig.registerEnabled
+    );
     const handleInputChange = (name) => (e) => {
         setInput({
             ...input,
@@ -82,7 +88,12 @@ function ResetForm() {
     const submit = (e) => {
         e.preventDefault();
         if (input.password !== input.password_repeat) {
-            ToggleSnackbar("top", "right", "两次密码输入不一致", "warning");
+            ToggleSnackbar(
+                "top",
+                "right",
+                t("login.passwordNotMatch"),
+                "warning"
+            );
             return;
         }
         setLoading(true);
@@ -94,7 +105,12 @@ function ResetForm() {
             .then(() => {
                 setLoading(false);
                 history.push("/login");
-                ToggleSnackbar("top", "right", "密码已重设", "success");
+                ToggleSnackbar(
+                    "top",
+                    "right",
+                    t("login.passwordReset"),
+                    "success"
+                );
             })
             .catch((error) => {
                 setLoading(false);
@@ -111,11 +127,13 @@ function ResetForm() {
                     <KeyIcon />
                 </Avatar>
                 <Typography component="h1" variant="h5">
-                    找回密码
+                    {t("login.findMyPassword")}
                 </Typography>
                 <form className={classes.form} onSubmit={submit}>
                     <FormControl margin="normal" required fullWidth>
-                        <InputLabel htmlFor="email">新密码</InputLabel>
+                        <InputLabel htmlFor="email">
+                            {t("login.newPassword")}
+                        </InputLabel>
                         <Input
                             id="pwd"
                             type="password"
@@ -127,7 +145,9 @@ function ResetForm() {
                         />
                     </FormControl>
                     <FormControl margin="normal" required fullWidth>
-                        <InputLabel htmlFor="email">重复新密码</InputLabel>
+                        <InputLabel htmlFor="email">
+                            {t("login.repeatNewPassword")}
+                        </InputLabel>
                         <Input
                             id="pwdRepeat"
                             type="password"
@@ -146,16 +166,22 @@ function ResetForm() {
                         disabled={loading}
                         className={classes.submit}
                     >
-                        重设密码
+                        {t("login.resetPassword")}
                     </Button>{" "}
                 </form>{" "}
                 <Divider />
                 <div className={classes.link}>
                     <div>
-                        <Link href={"/#/login"}>返回登录</Link>
+                        <Link component={RouterLink} to={"/login"}>
+                            {t("login.backToSingIn")}
+                        </Link>
                     </div>
                     <div>
-                        <Link href={"/#/signup"}>注册账号</Link>
+                        {registerEnabled && (
+                            <Link component={RouterLink} to={"/signup"}>
+                                {t("login.signUpAccount")}
+                            </Link>
+                        )}
                     </div>
                 </div>
             </Paper>

@@ -21,6 +21,7 @@ import {
     setSelectedTarget,
     toggleSnackbar,
 } from "../../redux/explorer";
+import useDragScrolling from "./DnD/Scrolling";
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -36,6 +37,7 @@ const useStyles = makeStyles(() => ({
 
 export default function ObjectIcon(props) {
     const path = useSelector((state) => state.navigator.path);
+    const shareInfo = useSelector((state) => state.viewUpdate.shareInfo);
     const selected = useSelector((state) => state.explorer.selected);
     const viewMethod = useSelector(
         (state) => state.viewUpdate.explorerViewMethod
@@ -109,7 +111,12 @@ export default function ObjectIcon(props) {
         }
 
         SelectFile(e);
-        if (props.file.type === "dir" && (!e.ctrlKey && !e.metaKey && !e.shiftKey)) {
+        if (
+            props.file.type === "dir" &&
+            !e.ctrlKey &&
+            !e.metaKey &&
+            !e.shiftKey
+        ) {
             enterFolder();
         }
     };
@@ -123,15 +130,22 @@ export default function ObjectIcon(props) {
             return;
         }
 
-        OpenPreview(window.shareInfo);
+        OpenPreview(shareInfo);
     };
 
     const handleIconClick = (e) => {
         e.stopPropagation();
-        e.ctrlKey = true;
+        if (!e.shiftKey) {
+            e.ctrlKey = true;
+        }
         SelectFile(e);
         return false;
     };
+
+    const {
+        addEventListenerForWindow,
+        removeEventListenerForWindow,
+    } = useDragScrolling();
 
     const [{ isDragging }, drag, preview] = useDrag({
         item: {
@@ -140,7 +154,11 @@ export default function ObjectIcon(props) {
             selected: [...selected],
             viewMethod: viewMethod,
         },
+        begin: () => {
+            addEventListenerForWindow();
+        },
         end: (item, monitor) => {
+            removeEventListenerForWindow();
             const dropResult = monitor.getDropResult();
             if (item && dropResult) {
                 if (dropResult.folder) {

@@ -19,6 +19,7 @@ import TypeIcon from "./TypeIcon";
 import CheckCircleRoundedIcon from "@material-ui/icons/CheckCircleRounded";
 import statusHelper from "../../utils/page";
 import Grow from "@material-ui/core/Grow";
+import FileName from "./FileName";
 
 const styles = (theme) => ({
     container: {},
@@ -125,6 +126,7 @@ const mapStateToProps = (state) => {
     return {
         path: state.navigator.path,
         selected: state.explorer.selected,
+        shareInfo: state.viewUpdate.shareInfo,
     };
 };
 
@@ -200,9 +202,9 @@ class FileIconCompoment extends Component {
                                     )}
                                     src={
                                         baseURL +
-                                        (isSharePage
+                                        (isSharePage && this.props.shareInfo
                                             ? "/share/thumb/" +
-                                              window.shareInfo.key +
+                                              this.props.shareInfo.key +
                                               "/" +
                                               this.props.file.id +
                                               "?path=" +
@@ -289,7 +291,7 @@ class FileIconCompoment extends Component {
                                     [classes.shareFix]: this.props.share,
                                 })}
                             >
-                                {this.props.file.name}
+                                <FileName name={this.props.file.name} />
                             </Typography>
                         </Tooltip>
                     </div>

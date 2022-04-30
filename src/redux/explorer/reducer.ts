@@ -7,6 +7,7 @@ interface SelectProps {
     isMultiple: boolean;
     withFolder: boolean;
     withFile: boolean;
+    withSourceEnabled: boolean;
 }
 
 export interface ExplorerState {
@@ -33,7 +34,10 @@ export interface ExplorerState {
         paused: boolean;
         isOpen: boolean;
     };
-    keywords: string;
+    search?: {
+        keywords: string;
+        searchPath: string;
+    };
     fileSave: boolean;
     sideBarOpen: boolean;
     currentPolicy?: Policy;
@@ -50,6 +54,7 @@ export const initState: ExplorerState = {
         isMultiple: false,
         withFolder: false,
         withFile: false,
+        withSourceEnabled: false,
     },
     lastSelect: {
         file: {
@@ -91,7 +96,6 @@ export const initState: ExplorerState = {
         paused: false,
         isOpen: false,
     },
-    keywords: "",
     fileSave: false,
     sideBarOpen: false,
 };
@@ -100,17 +104,23 @@ const checkSelectedProps = (selected: CloudreveFile[]): SelectProps => {
     const isMultiple = selected.length > 1;
     let withFolder = false;
     let withFile = false;
+    let withSourceEnabled = false;
     selected.forEach((value) => {
         if (value.type === "dir") {
             withFolder = true;
+            withSourceEnabled = true;
         } else if (value.type === "file") {
             withFile = true;
+            if (value.source_enabled) {
+                withSourceEnabled = true;
+            }
         }
     });
     return {
         isMultiple,
         withFolder,
         withFile,
+        withSourceEnabled,
     };
 };
 
@@ -161,6 +171,7 @@ const explorer = (
                     isMultiple: false,
                     withFolder: false,
                     withFile: false,
+                    withSourceEnabled: false,
                 },
             });
         case "SEARCH_MY_FILE":
@@ -170,8 +181,12 @@ const explorer = (
                     isMultiple: false,
                     withFolder: false,
                     withFile: false,
+                    withSourceEnabled: false,
                 },
-                keywords: action.keywords,
+                search: {
+                    keywords: action.keywords,
+                    searchPath: action.path,
+                },
             });
         case "SHOW_IMG_PREIVEW":
             return Object.assign({}, state, {
@@ -231,8 +246,9 @@ const explorer = (
                     isMultiple: false,
                     withFolder: false,
                     withFile: false,
+                    withSourceEnabled: false,
                 },
-                keywords: "",
+                search: undefined,
             };
         case "SET_SIDE_BAR":
             return {

@@ -1,7 +1,7 @@
 import { AnyAction } from "redux";
 import { ThunkAction } from "redux-thunk";
 import { CloudreveFile, SortMethod } from "./../../types/index";
-import { closeContextMenu } from "../viewUpdate/action";
+import { closeContextMenu, setPagination } from "../viewUpdate/action";
 import { Policy } from "../../component/Uploader/core/types";
 import streamSaver from "streamsaver";
 import "../../utils/zip";
@@ -17,6 +17,7 @@ import { push } from "connected-react-router";
 import {
     changeContextMenu,
     closeAllModals,
+    openGetSourceDialog,
     openLoadingDialog,
     showAudioPreview,
     showImgPreivew,
@@ -139,13 +140,25 @@ const sortMethodFuncs: Record<SortMethod, SortFunc> = {
     },
 };
 
+export const selectAll = (): ThunkAction<any, any, any, any> => {
+    return (dispatch, getState): void => {
+        const state = getState();
+        const { selected, fileList, dirList } = state.explorer;
+        if (selected.length >= dirList.length + fileList.length) {
+            dispatch(setSelectedTarget([]));
+        } else {
+            dispatch(setSelectedTarget([...dirList, ...fileList]));
+        }
+    };
+};
+
 export const updateFileList = (
     list: CloudreveFile[]
 ): ThunkAction<any, any, any, any> => {
     return (dispatch, getState): void => {
         const state = getState();
         // TODO: define state type
-        const { sortMethod } = state.viewUpdate;
+        const { sortMethod, pagination } = state.viewUpdate;
         const dirList = list.filter((x) => {
             return x.type === "dir";
         });
@@ -155,6 +168,15 @@ export const updateFileList = (
         const sortFunc = sortMethodFuncs[sortMethod as SortMethod];
         dispatch(setDirList(dirList.sort(sortFunc)));
         dispatch(setFileList(fileList.sort(sortFunc)));
+        const total = dirList.length + fileList.length;
+        if (pagination.page * pagination.size > total) {
+            dispatch(
+                setPagination({
+                    ...pagination,
+                    page: Math.max(Math.ceil(total / pagination.size), 1),
+                })
+            );
+        }
     };
 };
 
@@ -167,8 +189,8 @@ export const changeSortMethod = (
         const sortFunc = sortMethodFuncs[method];
         Auth.SetPreference("sort", method);
         dispatch(setSortMethod(method));
-        dispatch(setDirList(dirList.sort(sortFunc)));
-        dispatch(setFileList(fileList.sort(sortFunc)));
+        dispatch(setDirList(dirList.slice().sort(sortFunc)));
+        dispatch(setFileList(fileList.slice().sort(sortFunc)));
     };
 };
 
@@ -270,7 +292,7 @@ export const startDownload = (
             window.location.assign(res.data);
             dispatch(closeAllModals());
         } catch (e) {
-            toggleSnackbar("top", "right", e.message, "warning");
+            dispatch(toggleSnackbar("top", "right", e.message, "warning"));
             dispatch(closeAllModals());
         }
     };
@@ -501,22 +523,16 @@ export const selectFile = (file: any, event: any, fileIndex: any) => {
             fileList,
             shiftSelectedIds,
         } = explorer;
-        if (
-            shiftKey &&
-            !ctrlKey &&
-            !metaKey &&
-            selected.length !== 0 &&
-            // 点击类型一样
-            file.type === lastSelect.file.type
-        ) {
+        if (shiftKey && !ctrlKey && !metaKey && selected.length !== 0) {
             // shift 多选
             // 取消原有选择
             dispatch(removeSelectedTargets(selected.map((v: any) => v.id)));
+            const all = [...dirList, ...fileList];
             // 添加新选择
             const begin = Math.min(lastSelect.index, fileIndex);
             const end = Math.max(lastSelect.index, fileIndex);
             const list = file.type === "dir" ? dirList : fileList;
-            const newShiftSelected = list.slice(begin, end + 1);
+            const newShiftSelected = all.slice(begin, end + 1);
             return dispatch(addSelectedTargets(newShiftSelected));
         }
         dispatch(setLastSelect(file, fileIndex));
@@ -647,5 +663,95 @@ export const submitDecompressTask = (path: string) => {
             dst: path === "//" ? "/" : path,
             encoding: encoding,
         });
+    };
+};
+
+export const batchGetSource = (): ThunkAction<any, any, any, any> => {
+    return async (dispatch, getState): Promise<any> => {
+        const {
+            explorer: { selected },
+            router: {
+                location: { pathname },
+            },
+        } = getState();
+
+        if (selected.findIndex((f) => f.type === "dir") >= 0) {
+            dispatch(openLoadingDialog("列取文件中..."));
+        }
+
+        let queue: CloudreveFile[] = [];
+        try {
+            queue = await walk(selected, null);
+        } catch (e) {
+            dispatch(
+                toggleSnackbar(
+                    "top",
+                    "right",
+                    `列取文件时出错：${e.message}`,
+                    "warning"
+                )
+            );
+            dispatch(closeAllModals());
+            return;
+        }
+
+        dispatch(openLoadingDialog("生成外链中..."));
+
+        const items = queue
+            .filter((value) => value.source_enabled && value.type === "file")
+            .map((v) => v.id);
+
+        if (items.length === 0) {
+            dispatch(
+                toggleSnackbar(
+                    "top",
+                    "right",
+                    `没有可以生成外链的文件`,
+                    "warning"
+                )
+            );
+            dispatch(closeAllModals());
+            return;
+        }
+
+        const user = Auth.GetUser();
+        if (items.length > user.group.sourceBatch) {
+            dispatch(
+                toggleSnackbar(
+                    "top",
+                    "right",
+                    `当前用户组最大可同时为 ${user.group.sourceBatch} 个文件生成外链`,
+                    "warning"
+                )
+            );
+            dispatch(closeAllModals());
+            return;
+        }
+
+        API.post("/file/source", { items: items })
+            .then((response) => {
+                console.log(response);
+                dispatch(closeAllModals());
+                dispatch(
+                    openGetSourceDialog(
+                        response.data.length == 1
+                            ? response.data[0].url
+                            : response.data
+                                  .map(
+                                      (res) =>
+                                          `${res.name}: ${res.url}${
+                                              res.error ? res.error : ""
+                                          }`
+                                  )
+                                  .join("\n")
+                    )
+                );
+            })
+            .catch((error) => {
+                dispatch(
+                    toggleSnackbar("top", "right", error.message, "warning")
+                );
+                dispatch(closeAllModals());
+            });
     };
 };
