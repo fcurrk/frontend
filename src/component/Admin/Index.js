@@ -171,26 +171,6 @@ export default function Index() {
                 ToggleSnackbar("top", "right", error.message, "error");
             });
 
-        axios
-            .get("/api/v3/admin/news?tag=" + t("summary.newsTag"))
-            .then((response) => {
-                setNews(response.data.data);
-                const res = {};
-                response.data.included.forEach((v) => {
-                    if (v.type === "users") {
-                        res[v.id] = v.attributes;
-                    }
-                });
-                setNewsUsers(res);
-            })
-            .catch((error) => {
-                ToggleSnackbar(
-                    "top",
-                    "right",
-                    t("summary.newsletterError"),
-                    "warning"
-                );
-            });
     }, []);
 
     return (
@@ -321,13 +301,13 @@ export default function Index() {
                     </List>
                 </Paper>
             </Grid>
-            <Grid item xs={12} md={4} lg={3}>
+            <Grid item xs={12} md={12} lg={12}>
                 <Paper>
                     <div className={classes.logoContainer}>
                         <img
-                            alt="cloudreve"
+                            alt="MINIYUN"
                             className={classes.logo}
-                            src={"/static/img/cloudreve.svg"}
+                            src={"/static/img/miniyun.svg"}
                         />
                         <div className={classes.title}>
                             <Typography className={classes.cloudreve}>
@@ -341,185 +321,6 @@ export default function Index() {
                             </Typography>
                         </div>
                     </div>
-                    <Divider />
-                    <div>
-                        <List component="nav" aria-label="main mailbox folders">
-                            <ListItem
-                                button
-                                onClick={() =>
-                                    window.open("https://cloudreve.org")
-                                }
-                            >
-                                <ListItemIcon>
-                                    <Home />
-                                </ListItemIcon>
-                                <ListItemText primary={t("summary.homepage")} />
-                                <ListItemIcon className={classes.iconRight}>
-                                    <Launch />
-                                </ListItemIcon>
-                            </ListItem>
-                            <ListItem
-                                button
-                                onClick={() =>
-                                    window.open(
-                                        "https://github.com/cloudreve/cloudreve"
-                                    )
-                                }
-                            >
-                                <ListItemIcon>
-                                    <GitHub />
-                                </ListItemIcon>
-                                <ListItemText primary="GitHub" />
-                                <ListItemIcon className={classes.iconRight}>
-                                    <Launch />
-                                </ListItemIcon>
-                            </ListItem>
-                            <ListItem
-                                button
-                                onClick={() =>
-                                    window.open("https://docs.cloudreve.org/")
-                                }
-                            >
-                                <ListItemIcon>
-                                    <Description />
-                                </ListItemIcon>
-                                <ListItemText
-                                    primary={t("summary.documents")}
-                                />
-                                <ListItemIcon className={classes.iconRight}>
-                                    <Launch />
-                                </ListItemIcon>
-                            </ListItem>
-                            <ListItem
-                                button
-                                onClick={() =>
-                                    window.open(t("summary.forumLink"))
-                                }
-                            >
-                                <ListItemIcon>
-                                    <Forum />
-                                </ListItemIcon>
-                                <ListItemText primary={t("summary.forum")} />
-                                <ListItemIcon className={classes.iconRight}>
-                                    <Launch />
-                                </ListItemIcon>
-                            </ListItem>
-                            <ListItem
-                                button
-                                onClick={() =>
-                                    window.open(t("summary.telegramGroupLink"))
-                                }
-                            >
-                                <ListItemIcon>
-                                    <Telegram />
-                                </ListItemIcon>
-                                <ListItemText
-                                    primary={t("summary.telegramGroup")}
-                                />
-                                <ListItemIcon className={classes.iconRight}>
-                                    <Launch />
-                                </ListItemIcon>
-                            </ListItem>
-                            <ListItem
-                                button
-                                onClick={() =>
-                                    window.open("https://cloudreve.org/pro")
-                                }
-                            >
-                                <ListItemIcon style={{ color: "#ff789d" }}>
-                                    <Favorite />
-                                </ListItemIcon>
-                                <ListItemText primary={t("summary.buyPro")} />
-                                <ListItemIcon className={classes.iconRight}>
-                                    <Launch />
-                                </ListItemIcon>
-                            </ListItem>
-                        </List>
-                    </div>
-                </Paper>
-            </Grid>
-            <Grid item xs={12} md={8} lg={9}>
-                <Paper className={classes.paper}>
-                    <List>
-                        {news &&
-                            news.map((v) => (
-                                <>
-                                    <ListItem
-                                        button
-                                        alignItems="flex-start"
-                                        onClick={() =>
-                                            window.open(
-                                                "https://forum.cloudreve.org/d/" +
-                                                    v.id
-                                            )
-                                        }
-                                    >
-                                        <ListItemAvatar>
-                                            <Avatar
-                                                alt="Travis Howard"
-                                                src={
-                                                    newsUsers[
-                                                        v.relationships
-                                                            .startUser.data.id
-                                                    ] &&
-                                                    newsUsers[
-                                                        v.relationships
-                                                            .startUser.data.id
-                                                    ].avatarUrl
-                                                }
-                                            />
-                                        </ListItemAvatar>
-                                        <ListItemText
-                                            primary={v.attributes.title}
-                                            secondary={
-                                                <React.Fragment>
-                                                    <Typography
-                                                        component="span"
-                                                        variant="body2"
-                                                        className={
-                                                            classes.inline
-                                                        }
-                                                        color="textPrimary"
-                                                    >
-                                                        {newsUsers[
-                                                            v.relationships
-                                                                .startUser.data
-                                                                .id
-                                                        ] &&
-                                                            newsUsers[
-                                                                v.relationships
-                                                                    .startUser
-                                                                    .data.id
-                                                            ].username}{" "}
-                                                    </Typography>
-                                                    <Trans
-                                                        ns={"dashboard"}
-                                                        i18nKey="summary.publishedAt"
-                                                        components={[
-                                                            <TimeAgo
-                                                                key={0}
-                                                                datetime={
-                                                                    v.attributes
-                                                                        .startTime
-                                                                }
-                                                                locale={t(
-                                                                    "timeAgoLocaleCode",
-                                                                    {
-                                                                        ns:
-                                                                            "common",
-                                                                    }
-                                                                )}
-                                                            />,
-                                                        ]}
-                                                    />
-                                                </React.Fragment>
-                                            }
-                                        />
-                                    </ListItem>
-                                    <Divider />
-                                </>
-                            ))}
-                    </List>
                 </Paper>
             </Grid>
         </Grid>

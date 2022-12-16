@@ -126,7 +126,7 @@ export default function CreateWebDAVAccount(props) {
                             className={classes.input}
                             value={value.password}
                             onChange={handleInputChange("password")}
-                            label="WebDav密码(4-16位)"
+                            label={t("setting.webdavPassword")}
                         />
                     </div>
                     <div className={classes.formGroup}>

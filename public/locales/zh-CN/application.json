@@ -441,6 +441,7 @@
     "pleaseManuallyCopy": "当前浏览器不支持，请手动复制",
     "webdavAccounts": "WebDAV 账号管理",
     "webdavHint": "WebDAV的地址为：{{url}}；登录用户名统一为：{{name}} ；密码为所创建账号的密码。",
+    "webdavPassword": "WebDAV密码(4-16 bits)",
     "annotation": "备注名",
     "rootFolder": "相对根目录",
     "createdAt": "创建日期",

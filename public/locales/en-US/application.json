@@ -441,6 +441,7 @@
     "pleaseManuallyCopy": "Current browser does not support, please copy manually.",
     "webdavAccounts": "WebDAV Accounts",
     "webdavHint": "WebDAV server: {{url}}; Username: {{name}} ; The password is the password of the created account below.",
+    "webdavPassword": "WebDAV Password (4-16 bits)",
     "annotation": "Annotation",
     "rootFolder": "Relative root folder",
     "createdAt": "Created at",
