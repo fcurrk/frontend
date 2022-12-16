@@ -9,7 +9,7 @@
     "40043": "无法对初始用户执行此操作",
     "40046": "无法对主机节点执行此操作",
     "40060": "从机无法向主机发送回调请求，请检查主机端 参数设置 - 站点信息 - 站点URL设置，并确保从机可以连接到此地址 ({{message}})",
-    "40061": "Cloudreve 版本不一致 ({{message}})",
+    "40061": "版本不一致 ({{message}})",
     "50008": "设置项更新失败 ({{message}})",
     "50009": "跨域策略添加失败"
   },
@@ -33,10 +33,10 @@
     "remoteDownload": "离线下载",
     "generalTasks": "常规任务",
     "title": "仪表盘",
-    "dashboard": "Cloudreve 仪表盘"
+    "dashboard": "仪表盘"
   },
   "summary": {
-    "newsletterError": "Cloudreve 公告加载失败",
+    "newsletterError": "公告加载失败",
     "confirmSiteURLTitle": "确定站点URL设置",
     "siteURLNotSet": "您尚未设定站点URL，是否要将其设定为当前的 {{current}} ?",
     "siteURLNotMatch": "您设置的站点URL与当前实际不一致，是否要将其设定为当前的 {{current}} ?",
