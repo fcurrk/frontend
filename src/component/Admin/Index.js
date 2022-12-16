@@ -47,6 +47,7 @@ import TimeAgo from "timeago-react";
 import { toggleSnackbar } from "../../redux/explorer";
 import API from "../../middleware/Api";
 import pathHelper from "../../utils/page";
+import { Trans, useTranslation } from "react-i18next";
 
 const useStyles = makeStyles((theme) => ({
     paper: {
@@ -95,6 +96,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function Index() {
+    const { t } = useTranslation("dashboard");
     const classes = useStyles();
     const [lineData, setLineData] = useState([]);
     const [news, setNews] = useState([]);
@@ -130,7 +132,7 @@ export default function Index() {
         })
             .then(() => {
                 setSiteURL(window.location.origin);
-                ToggleSnackbar("top", "right", "设置已更改", "success");
+                ToggleSnackbar("top", "right", t("settings.saved"), "success");
             })
             .catch((error) => {
                 ToggleSnackbar("top", "right", error.message, "error");
@@ -169,6 +171,26 @@ export default function Index() {
                 ToggleSnackbar("top", "right", error.message, "error");
             });
 
+        axios
+            .get("/api/v3/admin/news?tag=" + t("summary.newsTag"))
+            .then((response) => {
+                setNews(response.data.data);
+                const res = {};
+                response.data.included.forEach((v) => {
+                    if (v.type === "users") {
+                        res[v.id] = v.attributes;
+                    }
+                });
+                setNewsUsers(res);
+            })
+            .catch((error) => {
+                ToggleSnackbar(
+                    "top",
+                    "right",
+                    t("summary.newsletterError"),
+                    "warning"
+                );
+            });
     }, []);
 
     return (
@@ -180,39 +202,38 @@ export default function Index() {
                 aria-describedby="alert-dialog-description"
             >
                 <DialogTitle id="alert-dialog-title">
-                    {"确定站点URL设置"}
+                    {t("summary.confirmSiteURLTitle")}
                 </DialogTitle>
                 <DialogContent>
                     <DialogContentText id="alert-dialog-description">
                         <Typography>
                             {siteURL === "" &&
-                                "您尚未设定站点URL，是否要将其设定为当前的 " +
-                                    window.location.origin +
-                                    " ?"}
+                                t("summary.siteURLNotSet", {
+                                    current: window.location.origin,
+                                })}
                             {siteURL !== "" &&
-                                "您设置的站点URL与当前实际不一致，是否要将其设定为当前的 " +
-                                    window.location.origin +
-                                    " ?"}
+                                t("summary.siteURLNotMatch", {
+                                    current: window.location.origin,
+                                })}
                         </Typography>
                         <Typography>
-                            此设置非常重要，请确保其与您站点的实际地址一致。你可以在
-                            参数设置 - 站点信息 中更改此设置。
+                            {t("summary.siteURLDescription")}
                         </Typography>
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setOpen(false)} color="default">
-                        忽略
+                        {t("summary.ignore")}
                     </Button>
                     <Button onClick={() => ResetSiteURL()} color="primary">
-                        更改
+                        {t("summary.changeIt")}
                     </Button>
                 </DialogActions>
             </Dialog>
             <Grid alignContent={"stretch"} item xs={12} md={8} lg={9}>
                 <Paper className={classes.paper}>
                     <Typography variant="button" display="block" gutterBottom>
-                        趋势
+                        {t("summary.trend")}
                     </Typography>
                     <ResponsiveContainer
                         width="100%"
@@ -225,19 +246,19 @@ export default function Index() {
                             <Tooltip />
                             <Legend />
                             <Line
-                                name={"文件"}
+                                name={t("nav.files")}
                                 type="monotone"
                                 dataKey="file"
                                 stroke="#3f51b5"
                             />
                             <Line
-                                name={"用户"}
+                                name={t("nav.users")}
                                 type="monotone"
                                 dataKey="user"
                                 stroke="#82ca9d"
                             />
                             <Line
-                                name={"分享"}
+                                name={t("nav.shares")}
                                 type="monotone"
                                 dataKey="share"
                                 stroke="#e91e63"
@@ -249,7 +270,7 @@ export default function Index() {
             <Grid item xs={12} md={4} lg={3}>
                 <Paper className={classes.paper}>
                     <Typography variant="button" display="block" gutterBottom>
-                        总计
+                        {t("summary.summary")}
                     </Typography>
                     <Divider />
                     <List className={classes.root}>
@@ -261,7 +282,7 @@ export default function Index() {
                             </ListItemAvatar>
                             <ListItemText
                                 primary={statistics.userTotal}
-                                secondary="注册用户"
+                                secondary={t("summary.totalUsers")}
                             />
                         </ListItem>
                         <ListItem>
@@ -272,7 +293,7 @@ export default function Index() {
                             </ListItemAvatar>
                             <ListItemText
                                 primary={statistics.fileTotal}
-                                secondary="文件总数"
+                                secondary={t("summary.totalFiles")}
                             />
                         </ListItem>
                         <ListItem>
@@ -283,7 +304,7 @@ export default function Index() {
                             </ListItemAvatar>
                             <ListItemText
                                 primary={statistics.publicShareTotal}
-                                secondary="公开分享总数"
+                                secondary={t("summary.publicShares")}
                             />
                         </ListItem>
                         <ListItem>
@@ -294,19 +315,19 @@ export default function Index() {
                             </ListItemAvatar>
                             <ListItemText
                                 primary={statistics.secretShareTotal}
-                                secondary="私密分享总数"
+                                secondary={t("summary.privateShares")}
                             />
                         </ListItem>
                     </List>
                 </Paper>
             </Grid>
-            <Grid item xs={12} md={12} lg={12}>
+            <Grid item xs={12} md={4} lg={3}>
                 <Paper>
                     <div className={classes.logoContainer}>
                         <img
-                            alt="MINIYUN"
+                            alt="cloudreve"
                             className={classes.logo}
-                            src={"/static/img/miniyun.svg"}
+                            src={"/static/img/cloudreve.svg"}
                         />
                         <div className={classes.title}>
                             <Typography className={classes.cloudreve}>
@@ -320,6 +341,185 @@ export default function Index() {
                             </Typography>
                         </div>
                     </div>
+                    <Divider />
+                    <div>
+                        <List component="nav" aria-label="main mailbox folders">
+                            <ListItem
+                                button
+                                onClick={() =>
+                                    window.open("https://cloudreve.org")
+                                }
+                            >
+                                <ListItemIcon>
+                                    <Home />
+                                </ListItemIcon>
+                                <ListItemText primary={t("summary.homepage")} />
+                                <ListItemIcon className={classes.iconRight}>
+                                    <Launch />
+                                </ListItemIcon>
+                            </ListItem>
+                            <ListItem
+                                button
+                                onClick={() =>
+                                    window.open(
+                                        "https://github.com/cloudreve/cloudreve"
+                                    )
+                                }
+                            >
+                                <ListItemIcon>
+                                    <GitHub />
+                                </ListItemIcon>
+                                <ListItemText primary="GitHub" />
+                                <ListItemIcon className={classes.iconRight}>
+                                    <Launch />
+                                </ListItemIcon>
+                            </ListItem>
+                            <ListItem
+                                button
+                                onClick={() =>
+                                    window.open("https://docs.cloudreve.org/")
+                                }
+                            >
+                                <ListItemIcon>
+                                    <Description />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primary={t("summary.documents")}
+                                />
+                                <ListItemIcon className={classes.iconRight}>
+                                    <Launch />
+                                </ListItemIcon>
+                            </ListItem>
+                            <ListItem
+                                button
+                                onClick={() =>
+                                    window.open(t("summary.forumLink"))
+                                }
+                            >
+                                <ListItemIcon>
+                                    <Forum />
+                                </ListItemIcon>
+                                <ListItemText primary={t("summary.forum")} />
+                                <ListItemIcon className={classes.iconRight}>
+                                    <Launch />
+                                </ListItemIcon>
+                            </ListItem>
+                            <ListItem
+                                button
+                                onClick={() =>
+                                    window.open(t("summary.telegramGroupLink"))
+                                }
+                            >
+                                <ListItemIcon>
+                                    <Telegram />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primary={t("summary.telegramGroup")}
+                                />
+                                <ListItemIcon className={classes.iconRight}>
+                                    <Launch />
+                                </ListItemIcon>
+                            </ListItem>
+                            <ListItem
+                                button
+                                onClick={() =>
+                                    window.open("https://cloudreve.org/pro")
+                                }
+                            >
+                                <ListItemIcon style={{ color: "#ff789d" }}>
+                                    <Favorite />
+                                </ListItemIcon>
+                                <ListItemText primary={t("summary.buyPro")} />
+                                <ListItemIcon className={classes.iconRight}>
+                                    <Launch />
+                                </ListItemIcon>
+                            </ListItem>
+                        </List>
+                    </div>
+                </Paper>
+            </Grid>
+            <Grid item xs={12} md={8} lg={9}>
+                <Paper className={classes.paper}>
+                    <List>
+                        {news &&
+                            news.map((v) => (
+                                <>
+                                    <ListItem
+                                        button
+                                        alignItems="flex-start"
+                                        onClick={() =>
+                                            window.open(
+                                                "https://forum.cloudreve.org/d/" +
+                                                    v.id
+                                            )
+                                        }
+                                    >
+                                        <ListItemAvatar>
+                                            <Avatar
+                                                alt="Travis Howard"
+                                                src={
+                                                    newsUsers[
+                                                        v.relationships
+                                                            .startUser.data.id
+                                                    ] &&
+                                                    newsUsers[
+                                                        v.relationships
+                                                            .startUser.data.id
+                                                    ].avatarUrl
+                                                }
+                                            />
+                                        </ListItemAvatar>
+                                        <ListItemText
+                                            primary={v.attributes.title}
+                                            secondary={
+                                                <React.Fragment>
+                                                    <Typography
+                                                        component="span"
+                                                        variant="body2"
+                                                        className={
+                                                            classes.inline
+                                                        }
+                                                        color="textPrimary"
+                                                    >
+                                                        {newsUsers[
+                                                            v.relationships
+                                                                .startUser.data
+                                                                .id
+                                                        ] &&
+                                                            newsUsers[
+                                                                v.relationships
+                                                                    .startUser
+                                                                    .data.id
+                                                            ].username}{" "}
+                                                    </Typography>
+                                                    <Trans
+                                                        ns={"dashboard"}
+                                                        i18nKey="summary.publishedAt"
+                                                        components={[
+                                                            <TimeAgo
+                                                                key={0}
+                                                                datetime={
+                                                                    v.attributes
+                                                                        .startTime
+                                                                }
+                                                                locale={t(
+                                                                    "timeAgoLocaleCode",
+                                                                    {
+                                                                        ns:
+                                                                            "common",
+                                                                    }
+                                                                )}
+                                                            />,
+                                                        ]}
+                                                    />
+                                                </React.Fragment>
+                                            }
+                                        />
+                                    </ListItem>
+                                    <Divider />
+                                </>
+                            ))}
+                    </List>
                 </Paper>
             </Grid>
         </Grid>

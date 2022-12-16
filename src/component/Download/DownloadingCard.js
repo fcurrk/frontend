@@ -19,13 +19,13 @@ import Grid from "@material-ui/core/Grid";
 import withStyles from "@material-ui/core/styles/withStyles";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
-import TableCell from "@material-ui/core/TableCell";
 import TableRow from "@material-ui/core/TableRow";
+import TableCell from "@material-ui/core/TableCell";
 import Tooltip from "@material-ui/core/Tooltip";
 import { ExpandMore, HighlightOff } from "@material-ui/icons";
 import PermMediaIcon from "@material-ui/icons/PermMedia";
 import classNames from "classnames";
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { useDispatch } from "react-redux";
 import TimeAgo from "timeago-react";
 import { toggleSnackbar } from "../../redux/explorer";
@@ -34,6 +34,9 @@ import { hex2bin, sizeToString } from "../../utils";
 import TypeIcon from "../FileManager/TypeIcon";
 import SelectFileDialog from "../Modals/SelectFile";
 import { useHistory } from "react-router";
+import { TableVirtuoso } from "react-virtuoso";
+import { useTranslation } from "react-i18next";
+
 const ExpansionPanel = withStyles({
     root: {
         maxWidth: "100%",
@@ -122,14 +125,26 @@ const useStyles = makeStyles((theme) => ({
     expanded: {
         transform: "rotate(180deg)",
     },
+    subFile: {
+        width: "100%",
+        minWidth: 300,
+        wordBreak: "break-all",
+    },
     subFileName: {
         display: "flex",
     },
     subFileIcon: {
         marginRight: "20px",
     },
+    subFileSize: {
+        minWidth: 120,
+    },
+    subFilePercent: {
+        minWidth: 105,
+    },
     scroll: {
-        overflowY: "auto",
+        overflow: "auto",
+        maxHeight: "300px",
     },
     action: {
         padding: theme.spacing(2),
@@ -143,9 +158,12 @@ const useStyles = makeStyles((theme) => ({
     },
     infoTitle: {
         fontWeight: 700,
+        textAlign: "left",
     },
     infoValue: {
         color: theme.palette.text.secondary,
+        textAlign: "left",
+        paddingLeft:theme.spacing(1),
     },
     bitmap: {
         width: "100%",
@@ -155,6 +173,8 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function DownloadingCard(props) {
+    const { t } = useTranslation("application", { keyPrefix: "download" });
+    const { t: tGlobal } = useTranslation();
     const canvasRef = React.createRef();
     const classes = useStyles();
     const theme = useTheme();
@@ -251,7 +271,7 @@ export default function DownloadingCard(props) {
                         files: newFiles,
                     },
                 });
-                ToggleSnackbar("top", "right", "文件已删除", "success");
+                ToggleSnackbar("top", "right", t("taskFileDeleted"), "success");
             })
             .catch((error) => {
                 ToggleSnackbar("top", "right", error.message, "error");
@@ -265,7 +285,7 @@ export default function DownloadingCard(props) {
         if (task.info.bittorrent.info.name !== "") {
             return task.info.bittorrent.info.name;
         }
-        return task.name === "." ? "[未知]" : task.name;
+        return task.name === "." ? t("unknownTaskName") : task.name;
     }, [task]);
 
     const getIcon = useCallback(() => {
@@ -290,12 +310,7 @@ export default function DownloadingCard(props) {
         setLoading(true);
         API.delete("/aria2/task/" + task.info.gid)
             .then(() => {
-                ToggleSnackbar(
-                    "top",
-                    "right",
-                    "任务已取消，状态会在稍后更新",
-                    "success"
-                );
+                ToggleSnackbar("top", "right", t("taskCanceled"), "success");
             })
             .catch((error) => {
                 ToggleSnackbar("top", "right", error.message, "error");
@@ -314,7 +329,7 @@ export default function DownloadingCard(props) {
                 ToggleSnackbar(
                     "top",
                     "right",
-                    "操作成功，状态会在稍后更新",
+                    t("operationSubmitted"),
                     "success"
                 );
                 setSelectDialogOpen(false);
@@ -326,6 +341,177 @@ export default function DownloadingCard(props) {
                 setLoading(false);
             });
     };
+
+    const subFileList = useMemo(() => {
+        const processStyle = (value) => ({
+            background:
+                "linear-gradient(to right, " +
+                (theme.palette.type ===
+                    "dark"
+                    ? darken(
+                        theme.palette
+                            .primary
+                            .main,
+                        0.4
+                    )
+                    : lighten(
+                        theme.palette
+                            .primary
+                            .main,
+                        0.85
+                    )) +
+                " 0%," +
+                (theme.palette.type ===
+                    "dark"
+                    ? darken(
+                        theme.palette
+                            .primary
+                            .main,
+                        0.4
+                    )
+                    : lighten(
+                        theme.palette
+                            .primary
+                            .main,
+                        0.85
+                    )) +
+                " " +
+                getPercent(
+                    value.completedLength,
+                    value.length
+                ).toFixed(0) +
+                "%," +
+                theme.palette.background
+                    .paper +
+                " " +
+                getPercent(
+                    value.completedLength,
+                    value.length
+                ).toFixed(0) +
+                "%," +
+                theme.palette.background
+                    .paper +
+                " 100%)",
+        });
+
+        const subFileCell = (value) => (
+            <>
+                <TableCell
+                    component="th"
+                    scope="row"
+                    className={classes.subFile}
+                >
+                    <Typography
+                        className={
+                            classes.subFileName
+                        }
+                    >
+                        <TypeIcon
+                            className={
+                                classes.subFileIcon
+                            }
+                            fileName={
+                                value.path
+                            }
+                        />
+                        {value.path}
+                    </Typography>
+                </TableCell>
+                <TableCell
+                    component="th"
+                    scope="row"
+                    className={classes.subFileSize}
+                >
+                    <Typography noWrap>
+                        {" "}
+                        {sizeToString(
+                            value.length
+                        )}
+                    </Typography>
+                </TableCell>
+                <TableCell
+                    component="th"
+                    scope="row"
+                    className={classes.subFilePercent}
+                >
+                    <Typography noWrap>
+                        {getPercent(
+                            value.completedLength,
+                            value.length
+                        ).toFixed(2)}
+                        %
+                    </Typography>
+                </TableCell>
+                <TableCell>
+                    <Tooltip
+                        title={t(
+                            "deleteThisFile"
+                        )}
+                    >
+                        <IconButton
+                            onClick={() =>
+                                deleteFile(
+                                    value.index
+                                )
+                            }
+                            disabled={loading}
+                            size={"small"}
+                        >
+                            <HighlightOff />
+                        </IconButton>
+                    </Tooltip>
+                </TableCell>
+            </>
+        );
+
+        return activeFiles().length > 5 ? (
+            <TableVirtuoso
+                style={{ height: 43 * activeFiles().length }}
+                className={classes.scroll}
+                components={{
+                    // eslint-disable-next-line react/display-name
+                    Table: (props) => <Table {...props} size={"small"} />,
+                    // eslint-disable-next-line react/display-name
+                    TableRow: (props) => {
+                        const index = props["data-index"];
+                        const value = activeFiles()[index];
+                        return (
+                            <TableRow
+                                {...props}
+                                key={index}
+                                style={processStyle(value)}
+                            />
+                        );
+                    },
+                }}
+                data={activeFiles()}
+                itemContent={(index, value) => (
+                    subFileCell(value)
+                )}
+            />
+        ) : (
+            <div className={classes.scroll}>
+                <Table size="small">
+                    <TableBody>
+                        {activeFiles().map((value) => {
+                            return (
+                                <TableRow
+                                    key={value.index}
+                                    style={processStyle(value)}
+                                >
+                                    {subFileCell(value)}
+                                </TableRow>
+                            );
+                        })}
+                    </TableBody>
+                </Table>
+            </div>
+        );
+    }, [
+        classes,
+        theme,
+        activeFiles,
+    ]);
 
     return (
         <Card className={classes.card}>
@@ -402,131 +588,7 @@ export default function DownloadingCard(props) {
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <Divider />
-                    {task.info.bittorrent.mode === "multi" && (
-                        <div className={classes.scroll}>
-                            <Table size="small">
-                                <TableBody>
-                                    {activeFiles().map((value) => {
-                                        return (
-                                            <TableRow
-                                                key={value.index}
-                                                style={{
-                                                    background:
-                                                        "linear-gradient(to right, " +
-                                                        (theme.palette.type ===
-                                                        "dark"
-                                                            ? darken(
-                                                                  theme.palette
-                                                                      .primary
-                                                                      .main,
-                                                                  0.4
-                                                              )
-                                                            : lighten(
-                                                                  theme.palette
-                                                                      .primary
-                                                                      .main,
-                                                                  0.85
-                                                              )) +
-                                                        " 0%," +
-                                                        (theme.palette.type ===
-                                                        "dark"
-                                                            ? darken(
-                                                                  theme.palette
-                                                                      .primary
-                                                                      .main,
-                                                                  0.4
-                                                              )
-                                                            : lighten(
-                                                                  theme.palette
-                                                                      .primary
-                                                                      .main,
-                                                                  0.85
-                                                              )) +
-                                                        " " +
-                                                        getPercent(
-                                                            value.completedLength,
-                                                            value.length
-                                                        ).toFixed(0) +
-                                                        "%," +
-                                                        theme.palette.background
-                                                            .paper +
-                                                        " " +
-                                                        getPercent(
-                                                            value.completedLength,
-                                                            value.length
-                                                        ).toFixed(0) +
-                                                        "%," +
-                                                        theme.palette.background
-                                                            .paper +
-                                                        " 100%)",
-                                                }}
-                                            >
-                                                <TableCell
-                                                    component="th"
-                                                    scope="row"
-                                                >
-                                                    <Typography
-                                                        className={
-                                                            classes.subFileName
-                                                        }
-                                                    >
-                                                        <TypeIcon
-                                                            className={
-                                                                classes.subFileIcon
-                                                            }
-                                                            fileName={
-                                                                value.path
-                                                            }
-                                                        />
-                                                        {value.path}
-                                                    </Typography>
-                                                </TableCell>
-                                                <TableCell
-                                                    component="th"
-                                                    scope="row"
-                                                >
-                                                    <Typography noWrap>
-                                                        {" "}
-                                                        {sizeToString(
-                                                            value.length
-                                                        )}
-                                                    </Typography>
-                                                </TableCell>
-                                                <TableCell
-                                                    component="th"
-                                                    scope="row"
-                                                >
-                                                    <Typography noWrap>
-                                                        {getPercent(
-                                                            value.completedLength,
-                                                            value.length
-                                                        ).toFixed(2)}
-                                                        %
-                                                    </Typography>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Tooltip title="删除此文件">
-                                                        <IconButton
-                                                            onClick={() =>
-                                                                deleteFile(
-                                                                    value.index
-                                                                )
-                                                            }
-                                                            disabled={loading}
-                                                            size={"small"}
-                                                        >
-                                                            <HighlightOff />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    )}
-
+                    {task.info.bittorrent.mode === "multi" && subFileList}
                     <div className={classes.action}>
                         <Button
                             className={classes.actionButton}
@@ -534,12 +596,11 @@ export default function DownloadingCard(props) {
                             color="secondary"
                             onClick={() =>
                                 history.push(
-                                    "/home?path=" +
-                                        encodeURIComponent(task.dst)
+                                    "/home?path=" + encodeURIComponent(task.dst)
                                 )
                             }
                         >
-                            打开存放目录
+                            {t("openDstFolder")}
                         </Button>
                         {task.info.bittorrent.mode === "multi" && (
                             <Button
@@ -554,7 +615,7 @@ export default function DownloadingCard(props) {
                                     ]);
                                 }}
                             >
-                                选择要下载的文件
+                                {t("selectDownloadingFile")}
                             </Button>
                         )}
                         <Button
@@ -564,7 +625,7 @@ export default function DownloadingCard(props) {
                             color="secondary"
                             disabled={loading}
                         >
-                            取消任务
+                            {t("cancelTask")}
                         </Button>
                     </div>
                     <Divider />
@@ -580,29 +641,31 @@ export default function DownloadingCard(props) {
 
                         <Grid container>
                             <Grid container xs={12} sm={4}>
-                                <Grid item xs={4} className={classes.infoTitle}>
-                                    更新于：
+                                <Grid item xs={5} className={classes.infoTitle}>
+                                    {t("updatedAt")}
                                 </Grid>
-                                <Grid item xs={8} className={classes.infoValue}>
+                                <Grid item xs={7} className={classes.infoValue}>
                                     <TimeAgo
                                         datetime={task.update}
-                                        locale="zh_CN"
+                                        locale={tGlobal("timeAgoLocaleCode", {
+                                            ns: "common",
+                                        })}
                                     />
                                 </Grid>
                             </Grid>
                             <Grid container xs={12} sm={4}>
-                                <Grid item xs={4} className={classes.infoTitle}>
-                                    上传大小：
+                                <Grid item xs={5} className={classes.infoTitle}>
+                                    {t("uploaded")}
                                 </Grid>
-                                <Grid item xs={8} className={classes.infoValue}>
+                                <Grid item xs={7} className={classes.infoValue}>
                                     {sizeToString(task.info.uploadLength)}
                                 </Grid>
                             </Grid>
                             <Grid container xs={12} sm={4}>
-                                <Grid item xs={4} className={classes.infoTitle}>
-                                    上传速度：
+                                <Grid item xs={5} className={classes.infoTitle}>
+                                    {t("uploadSpeed")}
                                 </Grid>
-                                <Grid item xs={8} className={classes.infoValue}>
+                                <Grid item xs={7} className={classes.infoValue}>
                                     {sizeToString(task.info.uploadSpeed)} / s
                                 </Grid>
                             </Grid>
@@ -615,7 +678,7 @@ export default function DownloadingCard(props) {
                                             xs={4}
                                             className={classes.infoTitle}
                                         >
-                                            InfoHash：
+                                            {t("InfoHash")}
                                         </Grid>
                                         <Grid
                                             item
@@ -632,14 +695,14 @@ export default function DownloadingCard(props) {
                                     <Grid container xs={12} sm={4}>
                                         <Grid
                                             item
-                                            xs={4}
+                                            xs={5}
                                             className={classes.infoTitle}
                                         >
-                                            做种者：
+                                            {t("seederCount")}
                                         </Grid>
                                         <Grid
                                             item
-                                            xs={8}
+                                            xs={7}
                                             className={classes.infoValue}
                                         >
                                             {task.info.numSeeders}
@@ -648,39 +711,47 @@ export default function DownloadingCard(props) {
                                     <Grid container xs={12} sm={4}>
                                         <Grid
                                             item
-                                            xs={4}
+                                            xs={5}
                                             className={classes.infoTitle}
                                         >
-                                            做种中：
+                                            {t("seeding")}
                                         </Grid>
                                         <Grid
                                             item
-                                            xs={8}
+                                            xs={7}
                                             className={classes.infoValue}
                                         >
                                             {task.info.seeder === "true"
-                                                ? "是"
-                                                : "否"}
+                                                ? t("isSeeding")
+                                                : t("notSeeding")}
                                         </Grid>
                                     </Grid>
                                 </>
                             )}
                             <Grid container xs={12} sm={4}>
-                                <Grid item xs={4} className={classes.infoTitle}>
-                                    分片大小：
+                                <Grid item xs={5} className={classes.infoTitle}>
+                                    {t("chunkSize")}
                                 </Grid>
-                                <Grid item xs={8} className={classes.infoValue}>
+                                <Grid item xs={7} className={classes.infoValue}>
                                     {sizeToString(task.info.pieceLength)}
                                 </Grid>
                             </Grid>
                             <Grid container xs={12} sm={4}>
-                                <Grid item xs={4} className={classes.infoTitle}>
-                                    分片数量：
+                                <Grid item xs={5} className={classes.infoTitle}>
+                                    {t("chunkNumbers")}
                                 </Grid>
-                                <Grid item xs={8} className={classes.infoValue}>
+                                <Grid item xs={7} className={classes.infoValue}>
                                     {task.info.numPieces}
                                 </Grid>
                             </Grid>
+                            {props.task.node && <Grid container xs={12} sm={4}>
+                                <Grid item xs={5} className={classes.infoTitle}>
+                                    {t("downloadNode")}
+                                </Grid>
+                                <Grid item xs={7} className={classes.infoValue}>
+                                    {props.task.node}
+                                </Grid>
+                            </Grid>}
                         </Grid>
                     </div>
                 </ExpansionPanelDetails>

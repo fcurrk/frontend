@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import {
     Card,
     CardContent,
@@ -17,10 +17,10 @@ import withStyles from "@material-ui/core/styles/withStyles";
 import Divider from "@material-ui/core/Divider";
 import { ExpandMore } from "@material-ui/icons";
 import classNames from "classnames";
+import Table from "@material-ui/core/Table";
+import TableBody from "@material-ui/core/TableBody";
 import TableRow from "@material-ui/core/TableRow";
 import TableCell from "@material-ui/core/TableCell";
-import TableBody from "@material-ui/core/TableBody";
-import Table from "@material-ui/core/Table";
 import Badge from "@material-ui/core/Badge";
 import Tooltip from "@material-ui/core/Tooltip";
 import Button from "@material-ui/core/Button";
@@ -30,6 +30,8 @@ import { useDispatch } from "react-redux";
 import { useHistory } from "react-router";
 import { formatLocalTime } from "../../utils/datetime";
 import { toggleSnackbar } from "../../redux/explorer";
+import { TableVirtuoso } from "react-virtuoso";
+import { useTranslation } from "react-i18next";
 
 const ExpansionPanel = withStyles({
     root: {
@@ -120,14 +122,26 @@ const useStyles = makeStyles((theme) => ({
     expanded: {
         transform: "rotate(180deg)",
     },
+    subFile: {
+        width: "100%",
+        minWidth: 300,
+        wordBreak: "break-all",
+    },
     subFileName: {
         display: "flex",
     },
     subFileIcon: {
         marginRight: "20px",
     },
+    subFileSize: {
+        minWidth: 115,
+    },
+    subFilePercent: {
+        minWidth: 100,
+    },
     scroll: {
-        overflowY: "auto",
+        overflow: "auto",
+        maxHeight: "300px",
     },
     action: {
         padding: theme.spacing(2),
@@ -141,13 +155,17 @@ const useStyles = makeStyles((theme) => ({
     },
     infoTitle: {
         fontWeight: 700,
+        textAlign: "left",
     },
     infoValue: {
         color: theme.palette.text.secondary,
+        textAlign: "left",
+        paddingLeft: theme.spacing(1),
     },
 }));
 
 export default function FinishedCard(props) {
+    const { t } = useTranslation("application", { keyPrefix: "download" });
     const classes = useStyles();
     const theme = useTheme();
     const history = useHistory();
@@ -177,7 +195,7 @@ export default function FinishedCard(props) {
         setLoading(true);
         API.delete("/aria2/task/" + props.task.gid)
             .then(() => {
-                ToggleSnackbar("top", "right", "删除成功", "success");
+                ToggleSnackbar("top", "right", t("taskDeleted"), "success");
             })
             .catch((error) => {
                 ToggleSnackbar("top", "right", error.message, "error");
@@ -188,7 +206,7 @@ export default function FinishedCard(props) {
     };
 
     const getDownloadName = useCallback(() => {
-        return props.task.name === "." ? "[未知]" : props.task.name;
+        return props.task.name === "." ? t("unknownTaskName") : props.task.name;
     }, [props.task.name]);
 
     const activeFiles = useCallback(() => {
@@ -217,9 +235,79 @@ export default function FinishedCard(props) {
             const res = JSON.parse(error);
             return res.msg + "：" + res.error;
         } catch (e) {
-            return "文件转存失败";
+            return t("transferFailed");
         }
     };
+
+    const subFileList = useMemo(() => {
+        const subFileCell = (value) => (
+            <>
+                <TableCell
+                    component="th"
+                    scope="row"
+                    className={classes.subFile}
+                >
+                    <Typography className={classes.subFileName}>
+                        <TypeIcon
+                            className={classes.subFileIcon}
+                            fileName={value.path}
+                        />
+                        {value.path}
+                    </Typography>
+                </TableCell>
+                <TableCell
+                    component="th"
+                    scope="row"
+                    className={classes.subFileSize}
+                >
+                    <Typography noWrap>
+                        {" "}
+                        {sizeToString(value.length)}
+                    </Typography>
+                </TableCell>
+                <TableCell
+                    component="th"
+                    scope="row"
+                    className={classes.subFilePercent}
+                >
+                    <Typography noWrap>
+                        {getPercent(
+                            value.completedLength,
+                            value.length
+                        ).toFixed(2)}
+                        %
+                    </Typography>
+                </TableCell>
+            </>
+        );
+
+        return activeFiles().length > 5 ? (
+            <TableVirtuoso
+                style={{ height: 57 * activeFiles().length }}
+                className={classes.scroll}
+                components={{
+                    // eslint-disable-next-line react/display-name
+                    Table: (props) => <Table {...props} />,
+                }}
+                data={activeFiles()}
+                itemContent={(index, value) => subFileCell(value)}
+            />
+        ) : (
+            <div className={classes.scroll}>
+                <Table>
+                    <TableBody>
+                        {activeFiles().map((value) => {
+                            return (
+                                <TableRow key={value.index}>
+                                    {subFileCell(value)}
+                                </TableRow>
+                            );
+                        })}
+                    </TableBody>
+                </Table>
+            </div>
+        );
+    }, [classes, activeFiles]);
 
     return (
         <Card className={classes.card}>
@@ -246,7 +334,9 @@ export default function FinishedCard(props) {
                                     color="error"
                                     noWrap
                                 >
-                                    下载出错：{props.task.error}
+                                    {t("downloadFailed", {
+                                        msg: props.task.error,
+                                    })}
                                 </Typography>
                             </Tooltip>
                         )}
@@ -256,9 +346,9 @@ export default function FinishedCard(props) {
                                 color="textSecondary"
                                 noWrap
                             >
-                                已取消
+                                {t("canceledStatus")}
                                 {props.task.error !== "" && (
-                                    <span>：{props.task.error}</span>
+                                    <span>({props.task.error})</span>
                                 )}
                             </Typography>
                         )}
@@ -271,7 +361,7 @@ export default function FinishedCard(props) {
                                     }}
                                     noWrap
                                 >
-                                    已完成
+                                    {t("finishedStatus")}
                                 </Typography>
                             )}
                         {props.task.status === 4 &&
@@ -283,7 +373,7 @@ export default function FinishedCard(props) {
                                     }}
                                     noWrap
                                 >
-                                    已完成，转存排队中
+                                    {t("transferring")}
                                 </Typography>
                             )}
                         {props.task.status === 4 &&
@@ -295,18 +385,22 @@ export default function FinishedCard(props) {
                                     }}
                                     noWrap
                                 >
-                                    已完成，转存处理中
+                                    {t("transferring")}
                                 </Typography>
                             )}
                         {props.task.status === 4 &&
                             props.task.task_status === 2 && (
-                                <Typography
-                                    variant="body2"
-                                    color={"error"}
-                                    noWrap
+                                <Tooltip
+                                    title={getTaskError(props.task.task_error)}
                                 >
-                                    {getTaskError(props.task.task_error)}
-                                </Typography>
+                                    <Typography
+                                        variant="body2"
+                                        color={"error"}
+                                        noWrap
+                                    >
+                                        {getTaskError(props.task.task_error)}
+                                    </Typography>
+                                </Tooltip>
                             )}
                     </CardContent>
                     <CardContent className={classes.contentSide}>
@@ -324,64 +418,7 @@ export default function FinishedCard(props) {
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <Divider />
-                    {props.task.files.length > 1 && (
-                        <div className={classes.scroll}>
-                            <Table>
-                                <TableBody>
-                                    {activeFiles().map((value) => {
-                                        return (
-                                            <TableRow key={value.index}>
-                                                <TableCell
-                                                    component="th"
-                                                    scope="row"
-                                                >
-                                                    <Typography
-                                                        className={
-                                                            classes.subFileName
-                                                        }
-                                                    >
-                                                        <TypeIcon
-                                                            className={
-                                                                classes.subFileIcon
-                                                            }
-                                                            fileName={
-                                                                value.path
-                                                            }
-                                                        />
-                                                        {value.path}
-                                                    </Typography>
-                                                </TableCell>
-                                                <TableCell
-                                                    component="th"
-                                                    scope="row"
-                                                >
-                                                    <Typography noWrap>
-                                                        {" "}
-                                                        {sizeToString(
-                                                            value.length
-                                                        )}
-                                                    </Typography>
-                                                </TableCell>
-                                                <TableCell
-                                                    component="th"
-                                                    scope="row"
-                                                >
-                                                    <Typography noWrap>
-                                                        {getPercent(
-                                                            value.completedLength,
-                                                            value.length
-                                                        ).toFixed(2)}
-                                                        %
-                                                    </Typography>
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    )}
-
+                    {props.task.files.length > 1 && subFileList}
                     <div className={classes.action}>
                         <Button
                             className={classes.actionButton}
@@ -389,12 +426,12 @@ export default function FinishedCard(props) {
                             color="secondary"
                             onClick={() =>
                                 history.push(
-                                    "/#/home?path=" +
+                                    "/home?path=" +
                                         encodeURIComponent(props.task.dst)
                                 )
                             }
                         >
-                            打开存放目录
+                            {t("openDstFolder")}
                         </Button>
                         <Button
                             className={classes.actionButton}
@@ -403,34 +440,46 @@ export default function FinishedCard(props) {
                             color="secondary"
                             disabled={loading}
                         >
-                            删除记录
+                            {t("deleteRecord")}
                         </Button>
                     </div>
                     <Divider />
                     <div className={classes.info}>
                         <Grid container>
                             <Grid container xs={12} sm={6}>
-                                <Grid item xs={4} className={classes.infoTitle}>
-                                    创建日期：
+                                <Grid item xs={5} className={classes.infoTitle}>
+                                    {t("createdAt")}
                                 </Grid>
-                                <Grid item xs={8} className={classes.infoValue}>
-                                    {formatLocalTime(
-                                        props.task.create,
-                                        "YYYY-MM-DD H:mm:ss"
-                                    )}
+                                <Grid item xs={7} className={classes.infoValue}>
+                                    {formatLocalTime(props.task.create)}
                                 </Grid>
                             </Grid>
                             <Grid container xs={12} sm={6}>
-                                <Grid item xs={4} className={classes.infoTitle}>
-                                    最后更新：
+                                <Grid item xs={5} className={classes.infoTitle}>
+                                    {t("updatedAt")}
                                 </Grid>
-                                <Grid item xs={8} className={classes.infoValue}>
-                                    {formatLocalTime(
-                                        props.task.update,
-                                        "YYYY-MM-DD H:mm:ss"
-                                    )}
+                                <Grid item xs={7} className={classes.infoValue}>
+                                    {formatLocalTime(props.task.update)}
                                 </Grid>
                             </Grid>
+                            {props.task.node && (
+                                <Grid container xs={12} sm={6}>
+                                    <Grid
+                                        item
+                                        xs={5}
+                                        className={classes.infoTitle}
+                                    >
+                                        {t("downloadNode")}
+                                    </Grid>
+                                    <Grid
+                                        item
+                                        xs={7}
+                                        className={classes.infoValue}
+                                    >
+                                        {props.task.node}
+                                    </Grid>
+                                </Grid>
+                            )}
                         </Grid>
                     </div>
                 </ExpansionPanelDetails>

@@ -9,6 +9,7 @@ import pathHelper from "../../utils/page";
 import TextLoading from "../Placeholder/TextLoading";
 import { toggleSnackbar } from "../../redux/explorer";
 import UseFileSubTitle from "../../hooks/fileSubtitle";
+import { useTranslation } from "react-i18next";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
@@ -28,8 +29,8 @@ const useStyles = makeStyles((theme) => ({
         canvas: {
             width: "100% !important",
             height: "auto !important",
-            borderRadius: 4,
-        },
+            borderRadius: theme.shape.borderRadius,
+        }
     },
     paper: {
         marginBottom: theme.spacing(3),
@@ -41,6 +42,7 @@ function useQuery() {
 }
 
 export default function PDFViewer() {
+    const { t } = useTranslation();
     const math = useRouteMatch();
     const location = useLocation();
     const query = useQuery();
@@ -74,7 +76,9 @@ export default function PDFViewer() {
                     ToggleSnackbar(
                         "top",
                         "right",
-                        "PDF 加载失败，" + error.message,
+                        t("fileManager.pdfLoadingError", {
+                            msg: error.message,
+                        }),
                         "error"
                     );
                 }}

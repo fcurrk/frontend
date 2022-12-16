@@ -49,6 +49,7 @@ import {
     ListAlt,
     PermContactCalendar,
     Schedule,
+    Translate,
 } from "@material-ui/icons";
 import Authn from "./Authn";
 import { formatLocalTime, timeZone } from "../../utils/datetime";
@@ -59,6 +60,9 @@ import {
     toggleDaylightMode,
     toggleSnackbar,
 } from "../../redux/explorer";
+import { Trans, withTranslation } from "react-i18next";
+import { selectLanguage } from "../../redux/viewUpdate/action";
+import OptionSelector from "../Modals/OptionSelector";
 
 const styles = (theme) => ({
     layout: {
@@ -94,10 +98,22 @@ const styles = (theme) => ({
     },
     infoText: {
         marginRight: "17px",
+        [theme.breakpoints.down("xs")]: {
+            maxWidth: 100,
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+        },
     },
     infoTextWithIcon: {
         marginRight: "17px",
         marginTop: "1px",
+        [theme.breakpoints.down("xs")]: {
+            maxWidth: 100,
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+        },
     },
     rightIconWithText: {
         marginTop: "0px",
@@ -177,6 +193,9 @@ const mapDispatchToProps = (dispatch) => {
         },
         changeView: (method) => {
             dispatch(changeViewMethod(method));
+        },
+        selectLanguage: () => {
+            dispatch(selectLanguage());
         },
     };
 };
@@ -285,7 +304,7 @@ class UserSettingCompoment extends Component {
                 this.props.toggleSnackbar(
                     "top",
                     "right",
-                    "头像已更新，刷新后生效",
+                    this.props.t("setting.avatarUpdated"),
                     "success"
                 );
                 this.setState({
@@ -316,7 +335,7 @@ class UserSettingCompoment extends Component {
                 this.props.toggleSnackbar(
                     "top",
                     "right",
-                    "昵称已更改，刷新后生效",
+                    this.props.t("nickChanged"),
                     "success"
                 );
                 this.setState({
@@ -352,7 +371,7 @@ class UserSettingCompoment extends Component {
                 this.props.toggleSnackbar(
                     "top",
                     "right",
-                    "头像已更新，刷新后生效",
+                    this.props.t("setting.avatarUpdated"),
                     "success"
                 );
                 this.setState({
@@ -380,7 +399,7 @@ class UserSettingCompoment extends Component {
                 this.props.toggleSnackbar(
                     "top",
                     "right",
-                    "设置已保存",
+                    this.props.t("setting.settingSaved"),
                     "success"
                 );
                 this.setState({
@@ -405,7 +424,7 @@ class UserSettingCompoment extends Component {
             this.props.toggleSnackbar(
                 "top",
                 "right",
-                "两次密码输入不一致",
+                this.props.t("login.passwordNotMatch"),
                 "warning"
             );
             return;
@@ -421,7 +440,7 @@ class UserSettingCompoment extends Component {
                 this.props.toggleSnackbar(
                     "top",
                     "right",
-                    "密码已更新",
+                    this.props.t("login.passwordReset"),
                     "success"
                 );
                 this.setState({
@@ -453,7 +472,7 @@ class UserSettingCompoment extends Component {
                 this.props.toggleSnackbar(
                     "top",
                     "right",
-                    "主题配色已更换",
+                    this.props.t("setting.themeColorChanged"),
                     "success"
                 );
                 this.props.applyThemes(this.state.chosenTheme);
@@ -552,7 +571,7 @@ class UserSettingCompoment extends Component {
                 this.props.toggleSnackbar(
                     "top",
                     "right",
-                    "设定已保存",
+                    this.props.t("setting.settingSaved"),
                     "success"
                 );
                 this.setState({
@@ -585,17 +604,13 @@ class UserSettingCompoment extends Component {
 
     toggleThemeMode = (current) => {
         const newMode =
-            current === null
-                ? "light"
-                : current === "light"
-                ? "dark"
-                : null;
+            current === null ? "light" : current === "light" ? "dark" : null;
         this.props.toggleDaylightMode();
         Auth.SetPreference("theme_mode", newMode);
     };
 
     render() {
-        const { classes } = this.props;
+        const { classes, t } = this.props;
         const user = Auth.GetUser();
         const dark = Auth.GetPreference("theme_mode");
 
@@ -606,7 +621,7 @@ class UserSettingCompoment extends Component {
                         className={classes.sectionTitle}
                         variant="subtitle2"
                     >
-                        个人资料
+                        {t("setting.profile")}
                     </Typography>
                     <Paper>
                         <List className={classes.desenList}>
@@ -625,7 +640,7 @@ class UserSettingCompoment extends Component {
                                         }
                                     />
                                 </ListItemAvatar>
-                                <ListItemText primary="头像" />
+                                <ListItemText primary={t("setting.avatar")} />
                                 <ListItemSecondaryAction>
                                     <RightIcon className={classes.rightIcon} />
                                 </ListItemSecondaryAction>
@@ -635,7 +650,7 @@ class UserSettingCompoment extends Component {
                                 <ListItemIcon className={classes.iconFix}>
                                     <PermContactCalendar />
                                 </ListItemIcon>
-                                <ListItemText primary="UID" />
+                                <ListItemText primary={t("setting.uid")} />
 
                                 <ListItemSecondaryAction>
                                     <Typography
@@ -656,7 +671,7 @@ class UserSettingCompoment extends Component {
                                 <ListItemIcon className={classes.iconFix}>
                                     <NickIcon />
                                 </ListItemIcon>
-                                <ListItemText primary="昵称" />
+                                <ListItemText primary={t("setting.nickname")} />
 
                                 <ListItemSecondaryAction
                                     onClick={() =>
@@ -680,7 +695,7 @@ class UserSettingCompoment extends Component {
                                 <ListItemIcon className={classes.iconFix}>
                                     <EmailIcon />
                                 </ListItemIcon>
-                                <ListItemText primary="Email" />
+                                <ListItemText primary={t("login.email")} />
 
                                 <ListItemSecondaryAction>
                                     <Typography
@@ -696,7 +711,7 @@ class UserSettingCompoment extends Component {
                                 <ListItemIcon className={classes.iconFix}>
                                     <GroupIcon />
                                 </ListItemIcon>
-                                <ListItemText primary="用户组" />
+                                <ListItemText primary={t("setting.group")} />
 
                                 <ListItemSecondaryAction>
                                     <Typography
@@ -712,17 +727,14 @@ class UserSettingCompoment extends Component {
                                 <ListItemIcon className={classes.iconFix}>
                                     <DateIcon />
                                 </ListItemIcon>
-                                <ListItemText primary="注册时间" />
+                                <ListItemText primary={t("setting.regTime")} />
 
                                 <ListItemSecondaryAction>
                                     <Typography
                                         className={classes.infoText}
                                         color="textSecondary"
                                     >
-                                        {formatLocalTime(
-                                            user.created_at,
-                                            "YYYY-MM-DD H:mm:ss"
-                                        )}
+                                        {formatLocalTime(user.created_at)}
                                     </Typography>
                                 </ListItemSecondaryAction>
                             </ListItem>
@@ -732,7 +744,7 @@ class UserSettingCompoment extends Component {
                         className={classes.sectionTitle}
                         variant="subtitle2"
                     >
-                        安全隐私
+                        {t("setting.privacyAndSecurity")}
                     </Typography>
                     <Paper>
                         <List className={classes.desenList}>
@@ -740,7 +752,9 @@ class UserSettingCompoment extends Component {
                                 <ListItemIcon className={classes.iconFix}>
                                     <HomeIcon />
                                 </ListItemIcon>
-                                <ListItemText primary="个人主页" />
+                                <ListItemText
+                                    primary={t("setting.profilePage")}
+                                />
 
                                 <ListItemSecondaryAction>
                                     <Switch
@@ -759,7 +773,9 @@ class UserSettingCompoment extends Component {
                                 <ListItemIcon className={classes.iconFix}>
                                     <LockIcon />
                                 </ListItemIcon>
-                                <ListItemText primary="登录密码" />
+                                <ListItemText
+                                    primary={t("setting.accountPassword")}
+                                />
 
                                 <ListItemSecondaryAction
                                     className={classes.flexContainer}
@@ -772,7 +788,7 @@ class UserSettingCompoment extends Component {
                                 <ListItemIcon className={classes.iconFix}>
                                     <VerifyIcon />
                                 </ListItemIcon>
-                                <ListItemText primary="二步验证" />
+                                <ListItemText primary={t("setting.2fa")} />
 
                                 <ListItemSecondaryAction
                                     className={classes.flexContainer}
@@ -782,8 +798,8 @@ class UserSettingCompoment extends Component {
                                         color="textSecondary"
                                     >
                                         {!this.state.settings.two_factor
-                                            ? "未开启"
-                                            : "已开启"}
+                                            ? t("setting.disabled")
+                                            : t("setting.enabled")}
                                     </Typography>
                                     <RightIcon
                                         className={classes.rightIconWithText}
@@ -824,7 +840,7 @@ class UserSettingCompoment extends Component {
                         className={classes.sectionTitle}
                         variant="subtitle2"
                     >
-                        个性化
+                        {t("setting.appearance")}
                     </Typography>
                     <Paper>
                         <List className={classes.desenList}>
@@ -837,13 +853,15 @@ class UserSettingCompoment extends Component {
                                 <ListItemIcon className={classes.iconFix}>
                                     <ColorIcon />
                                 </ListItemIcon>
-                                <ListItemText primary="主题配色" />
+                                <ListItemText
+                                    primary={t("setting.themeColor")}
+                                />
 
                                 <ListItemSecondaryAction
                                     className={classes.flexContainer}
                                 >
-                                    <div className={classes.firstColor}></div>
-                                    <div className={classes.secondColor}></div>
+                                    <div className={classes.firstColor} />
+                                    <div className={classes.secondColor} />
                                 </ListItemSecondaryAction>
                             </ListItem>
                             <Divider />
@@ -854,7 +872,7 @@ class UserSettingCompoment extends Component {
                                 <ListItemIcon className={classes.iconFix}>
                                     <Brightness3 />
                                 </ListItemIcon>
-                                <ListItemText primary="黑暗模式" />
+                                <ListItemText primary={t("setting.darkMode")} />
 
                                 <ListItemSecondaryAction
                                     className={classes.flexContainer}
@@ -865,9 +883,10 @@ class UserSettingCompoment extends Component {
                                     >
                                         {dark &&
                                             (dark === "dark"
-                                                ? "偏好开启"
-                                                : "偏好关闭")}
-                                        {dark === null && "跟随系统"}
+                                                ? t("setting.enabled")
+                                                : t("setting.disabled"))}
+                                        {dark === null &&
+                                            t("setting.syncWithSystem")}
                                     </Typography>
                                     <RightIcon
                                         className={classes.rightIconWithText}
@@ -882,7 +901,7 @@ class UserSettingCompoment extends Component {
                                 <ListItemIcon className={classes.iconFix}>
                                     <ListAlt />
                                 </ListItemIcon>
-                                <ListItemText primary="文件列表" />
+                                <ListItemText primary={t("setting.fileList")} />
 
                                 <ListItemSecondaryAction
                                     className={classes.flexContainer}
@@ -892,11 +911,12 @@ class UserSettingCompoment extends Component {
                                         color="textSecondary"
                                     >
                                         {this.props.viewMethod === "icon" &&
-                                            "大图标"}
+                                            t("fileManager.gridViewLarge")}
                                         {this.props.viewMethod === "list" &&
-                                            "列表"}
+                                            t("fileManager.listView")}
                                         {this.props.viewMethod ===
-                                            "smallIcon" && "小图标"}
+                                            "smallIcon" &&
+                                            t("fileManager.gridViewSmall")}
                                     </Typography>
                                     <RightIcon
                                         className={classes.rightIconWithText}
@@ -913,7 +933,7 @@ class UserSettingCompoment extends Component {
                                 <ListItemIcon className={classes.iconFix}>
                                     <Schedule />
                                 </ListItemIcon>
-                                <ListItemText primary="时区" />
+                                <ListItemText primary={t("setting.timeZone")} />
 
                                 <ListItemSecondaryAction
                                     className={classes.flexContainer}
@@ -924,6 +944,24 @@ class UserSettingCompoment extends Component {
                                     >
                                         {timeZone}
                                     </Typography>
+                                    <RightIcon
+                                        className={classes.rightIconWithText}
+                                    />
+                                </ListItemSecondaryAction>
+                            </ListItem>
+                            <Divider />
+                            <ListItem
+                                onClick={() => this.props.selectLanguage()}
+                                button
+                            >
+                                <ListItemIcon className={classes.iconFix}>
+                                    <Translate />
+                                </ListItemIcon>
+                                <ListItemText primary={t("setting.language")} />
+
+                                <ListItemSecondaryAction
+                                    className={classes.flexContainer}
+                                >
                                     <RightIcon
                                         className={classes.rightIconWithText}
                                     />
@@ -954,7 +992,9 @@ class UserSettingCompoment extends Component {
                                         >
                                             <LinkIcon />
                                         </ListItemIcon>
-                                        <ListItemText primary="连接地址" />
+                                        <ListItemText
+                                            primary={t("setting.webdavServer")}
+                                        />
 
                                         <ListItemSecondaryAction
                                             className={classes.flexContainer}
@@ -978,7 +1018,9 @@ class UserSettingCompoment extends Component {
                                         >
                                             <InputIcon />
                                         </ListItemIcon>
-                                        <ListItemText primary="用户名" />
+                                        <ListItemText
+                                            primary={t("setting.userName")}
+                                        />
 
                                         <ListItemSecondaryAction
                                             className={classes.flexContainer}
@@ -1000,7 +1042,9 @@ class UserSettingCompoment extends Component {
                                         >
                                             <SecurityIcon />
                                         </ListItemIcon>
-                                        <ListItemText primary="账号管理" />
+                                        <ListItemText
+                                            primary={t("setting.manageAccount")}
+                                        />
 
                                         <ListItemSecondaryAction
                                             className={classes.flexContainer}
@@ -1015,8 +1059,59 @@ class UserSettingCompoment extends Component {
                         </div>
                     )}
 
+                    <Typography
+                        className={classes.sectionTitle}
+                        variant="subtitle2"
+                    >
+                        {t("setting.aboutCloudreve")}
+                    </Typography>
+                    <Paper>
+                        <List className={classes.desenList}>
+                            <ListItem
+                                button
+                                onClick={() =>
+                                    window.open(
+                                        "https://github.com/cloudreve/cloudreve"
+                                    )
+                                }
+                            >
+                                <ListItemIcon className={classes.iconFix}>
+                                    <GitHub />
+                                </ListItemIcon>
+                                <ListItemText primary={t("setting.githubRepo")} />
 
-                    <div className={classes.paddingBottom}></div>
+                                <ListItemSecondaryAction
+                                    className={classes.flexContainer}
+                                >
+                                    <RightIcon
+                                        className={classes.rightIconWithText}
+                                    />
+                                </ListItemSecondaryAction>
+                            </ListItem>
+                            <Divider />
+                            <ListItem
+                                button
+                                onClick={() =>
+                                    window.open("https://cloudreve.org")
+                                }
+                            >
+                                <ListItemIcon className={classes.iconFix}>
+                                    <Home />
+                                </ListItemIcon>
+                                <ListItemText primary={t("setting.homepage")} />
+
+                                <ListItemSecondaryAction
+                                    className={classes.flexContainer}
+                                >
+                                    <RightIcon
+                                        className={classes.rightIconWithText}
+                                    />
+                                </ListItemSecondaryAction>
+                            </ListItem>
+                        </List>
+                    </Paper>
+
+                    <div className={classes.paddingBottom} />
                 </div>
                 <TimeZoneDialog
                     onClose={() => this.setState({ changeTimeZone: false })}
@@ -1026,7 +1121,7 @@ class UserSettingCompoment extends Component {
                     open={this.state.avatarModal}
                     onClose={this.handleClose}
                 >
-                    <DialogTitle>修改头像</DialogTitle>
+                    <DialogTitle>{t("setting.avatar")}</DialogTitle>
                     <List>
                         <ListItem
                             button
@@ -1045,7 +1140,7 @@ class UserSettingCompoment extends Component {
                                     <PhotoIcon />
                                 </Avatar>
                             </ListItemAvatar>
-                            <ListItemText primary="从文件上传" />
+                            <ListItemText primary={t("setting.uploadImage")} />
                         </ListItem>
                         <ListItem
                             button
@@ -1059,22 +1154,22 @@ class UserSettingCompoment extends Component {
                             </ListItemAvatar>
                             <ListItemText
                                 className={classes.paddingText}
-                                primary="使用 Gravatar 头像 "
+                                primary={t("setting.useGravatar")}
                             />
                         </ListItem>
                     </List>
                     <DialogActions>
                         <Button onClick={this.handleClose} color="primary">
-                            取消
+                            {t("cancel", { ns: "common" })}
                         </Button>
                     </DialogActions>
                 </Dialog>
                 <Dialog open={this.state.nickModal} onClose={this.handleClose}>
-                    <DialogTitle>修改昵称</DialogTitle>
+                    <DialogTitle>{t("setting.changeNick")}</DialogTitle>
                     <DialogContent>
                         <TextField
                             id="standard-name"
-                            label="昵称"
+                            label={t("setting.nickname")}
                             className={classes.textField}
                             value={this.state.nick}
                             onChange={this.handleChange("nick")}
@@ -1084,7 +1179,7 @@ class UserSettingCompoment extends Component {
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={this.handleClose} color="default">
-                            取消
+                            {t("cancel", { ns: "common" })}
                         </Button>
                         <Button
                             onClick={this.changeNick}
@@ -1094,7 +1189,7 @@ class UserSettingCompoment extends Component {
                                 this.state.nick === ""
                             }
                         >
-                            保存
+                            {t("ok", { ns: "common" })}
                         </Button>
                     </DialogActions>
                 </Dialog>
@@ -1102,12 +1197,12 @@ class UserSettingCompoment extends Component {
                     open={this.state.changePassword}
                     onClose={this.handleClose}
                 >
-                    <DialogTitle>修改登录密码</DialogTitle>
+                    <DialogTitle>{t("login.resetPassword")}</DialogTitle>
                     <DialogContent>
                         <div>
                             <TextField
                                 id="standard-name"
-                                label="原密码"
+                                label={t("setting.originalPassword")}
                                 type="password"
                                 className={classes.textField}
                                 value={this.state.oldPwd}
@@ -1119,7 +1214,7 @@ class UserSettingCompoment extends Component {
                         <div>
                             <TextField
                                 id="standard-name"
-                                label="新密码"
+                                label={t("login.newPassword")}
                                 type="password"
                                 className={classes.textField}
                                 value={this.state.newPwd}
@@ -1130,7 +1225,7 @@ class UserSettingCompoment extends Component {
                         <div>
                             <TextField
                                 id="standard-name"
-                                label="确认新密码"
+                                label={t("login.repeatNewPassword")}
                                 type="password"
                                 className={classes.textField}
                                 value={this.state.newPwdRepeat}
@@ -1141,7 +1236,7 @@ class UserSettingCompoment extends Component {
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={this.handleClose} color="default">
-                            取消
+                            {t("cancel", { ns: "common" })}
                         </Button>
                         <Button
                             onClick={this.changhePwd}
@@ -1153,14 +1248,15 @@ class UserSettingCompoment extends Component {
                                 this.state.newPwd === ""
                             }
                         >
-                            保存
+                            {t("ok", { ns: "common" })}
                         </Button>
                     </DialogActions>
                 </Dialog>
                 <Dialog open={this.state.twoFactor} onClose={this.handleClose}>
                     <DialogTitle>
-                        {this.state.settings.two_factor ? "关闭" : "启用"}
-                        二步验证
+                        {this.state.settings.two_factor
+                            ? t("setting.disable2FA")
+                            : t("setting.enable2FA")}
                     </DialogTitle>
                     <DialogContent>
                         <div className={classes.flexContainerResponse}>
@@ -1180,17 +1276,17 @@ class UserSettingCompoment extends Component {
                             <div className={classes.desText}>
                                 {!this.state.settings.two_factor && (
                                     <Typography>
-                                        请使用任意二步验证APP或者支持二步验证的密码管理软件扫描左侧二维码添加本站。扫描完成后请填写二步验证APP给出的6位验证码以开启二步验证。
+                                        {t("setting.2faDescription")}
                                     </Typography>
                                 )}
                                 {this.state.settings.two_factor && (
                                     <Typography>
-                                        请验证当前二步验证代码。
+                                        {t("setting.inputCurrent2FACode")}
                                     </Typography>
                                 )}
                                 <TextField
                                     id="standard-name"
-                                    label="6位验证码"
+                                    label={t("login.input2FACode")}
                                     type="number"
                                     className={classes.textField}
                                     value={this.state.authCode}
@@ -1204,7 +1300,7 @@ class UserSettingCompoment extends Component {
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={this.handleClose} color="default">
-                            取消
+                            {t("cancel", { ns: "common" })}
                         </Button>
                         <Button
                             onClick={this.twoFactor}
@@ -1214,8 +1310,9 @@ class UserSettingCompoment extends Component {
                                 this.state.authCode === ""
                             }
                         >
-                            {this.state.settings.two_factor ? "关闭" : "启用"}
-                            二步验证
+                            {this.state.settings.two_factor
+                                ? t("setting.disable2FA")
+                                : t("setting.enable2FA")}
                         </Button>
                     </DialogActions>
                 </Dialog>
@@ -1223,7 +1320,7 @@ class UserSettingCompoment extends Component {
                     open={this.state.changeTheme}
                     onClose={this.handleClose}
                 >
-                    <DialogTitle>更改主题配色</DialogTitle>
+                    <DialogTitle>{t("setting.themeColor")}</DialogTitle>
                     <DialogContent>
                         <ToggleButtonGroup
                             value={this.state.chosenTheme}
@@ -1244,7 +1341,7 @@ class UserSettingCompoment extends Component {
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={this.handleClose} color="default">
-                            取消
+                            {t("cancel", { ns: "common" })}
                         </Button>
                         <Button
                             onClick={this.changeTheme}
@@ -1254,7 +1351,7 @@ class UserSettingCompoment extends Component {
                                 this.state.chosenTheme === null
                             }
                         >
-                            保存
+                            {t("ok", { ns: "common" })}
                         </Button>
                     </DialogActions>
                 </Dialog>
@@ -1262,7 +1359,7 @@ class UserSettingCompoment extends Component {
                     open={this.state.showWebDavUrl}
                     onClose={this.handleClose}
                 >
-                    <DialogTitle>WebDAV连接地址</DialogTitle>
+                    <DialogTitle>{t("setting.webdavServer")}</DialogTitle>
                     <DialogContent>
                         <TextField
                             id="standard-name"
@@ -1274,7 +1371,7 @@ class UserSettingCompoment extends Component {
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={this.handleClose} color="default">
-                            关闭
+                            {t("close", { ns: "common" })}
                         </Button>
                     </DialogActions>
                 </Dialog>
@@ -1282,7 +1379,7 @@ class UserSettingCompoment extends Component {
                     open={this.state.showWebDavUserName}
                     onClose={this.handleClose}
                 >
-                    <DialogTitle>WebDAV用户名</DialogTitle>
+                    <DialogTitle>{t("setting.userName")}</DialogTitle>
                     <DialogContent>
                         <TextField
                             id="standard-name"
@@ -1294,10 +1391,11 @@ class UserSettingCompoment extends Component {
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={this.handleClose} color="default">
-                            关闭
+                            {t("close", { ns: "common" })}
                         </Button>
                     </DialogActions>
                 </Dialog>
+                <OptionSelector />
             </div>
         );
     }
@@ -1306,6 +1404,6 @@ class UserSettingCompoment extends Component {
 const UserSetting = connect(
     mapStateToProps,
     mapDispatchToProps
-)(withStyles(styles)(withRouter(UserSettingCompoment)));
+)(withStyles(styles)(withRouter(withTranslation()(UserSettingCompoment))));
 
 export default UserSetting;

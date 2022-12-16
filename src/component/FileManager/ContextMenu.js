@@ -18,7 +18,12 @@ import MoveIcon from "@material-ui/icons/Input";
 import LinkIcon from "@material-ui/icons/InsertLink";
 import OpenIcon from "@material-ui/icons/OpenInNew";
 import ShareIcon from "@material-ui/icons/Share";
-import { FolderUpload, MagnetOn, FilePlus } from "mdi-material-ui";
+import {
+    FolderDownload,
+    FolderUpload,
+    MagnetOn,
+    FilePlus,
+} from "mdi-material-ui";
 import PropTypes from "prop-types";
 import React, { Component } from "react";
 import { connect } from "react-redux";
@@ -29,9 +34,12 @@ import pathHelper from "../../utils/page";
 import RefreshIcon from "@material-ui/icons/Refresh";
 import {
     batchGetSource,
+    openParentFolder,
     openPreview,
+    openTorrentDownload,
     setSelectedTarget,
     startBatchDownload,
+    startDirectoryDownload,
     startDownload,
     toggleObjectInfoSidebar,
 } from "../../redux/explorer/action";
@@ -50,7 +58,6 @@ import {
     openRemoveDialog,
     openRenameDialog,
     openShareDialog,
-    openTorrentDownloadDialog,
     refreshFileList,
     setNavigatorLoadingStatus,
     showImgPreivew,
@@ -61,6 +68,7 @@ import {
     openFileSelector,
     openFolderSelector,
 } from "../../redux/viewUpdate/action";
+import { withTranslation } from "react-i18next";
 
 const styles = () => ({
     propover: {},
@@ -135,7 +143,7 @@ const mapDispatchToProps = (dispatch) => {
             dispatch(openRemoteDownloadDialog());
         },
         openTorrentDownloadDialog: () => {
-            dispatch(openTorrentDownloadDialog());
+            dispatch(openTorrentDownload());
         },
         openCopyDialog: () => {
             dispatch(openCopyDialog());
@@ -173,6 +181,12 @@ const mapDispatchToProps = (dispatch) => {
         batchGetSource: () => {
             dispatch(batchGetSource());
         },
+        startDirectoryDownload: (share) => {
+            dispatch(startDirectoryDownload(share));
+        },
+        openParentFolder: () => {
+            dispatch(openParentFolder());
+        },
     };
 };
 
@@ -193,6 +207,10 @@ class ContextMenuCompoment extends Component {
 
     openArchiveDownload = () => {
         this.props.startBatchDownload(this.props.share);
+    };
+
+    openDirectoryDownload = () => {
+        this.props.startDirectoryDownload(this.props.share);
     };
 
     openDownload = () => {
@@ -239,7 +257,7 @@ class ContextMenuCompoment extends Component {
     };
 
     render() {
-        const { classes } = this.props;
+        const { classes, t } = this.props;
         const user = Auth.GetUser();
         const isHomePage = pathHelper.isHomePage(this.props.location.pathname);
         const emptyMenuList = {
@@ -327,7 +345,9 @@ class ContextMenuCompoment extends Component {
                                 <StyledListItemIcon>
                                     <RefreshIcon />
                                 </StyledListItemIcon>
-                                <Typography variant="inherit">刷新</Typography>
+                                <Typography variant="inherit">
+                                    {t("fileManager.refresh")}
+                                </Typography>
                             </MenuItem>
                             <Divider className={classes.divider} />
                             <MenuItem
@@ -338,7 +358,7 @@ class ContextMenuCompoment extends Component {
                                     <UploadIcon />
                                 </StyledListItemIcon>
                                 <Typography variant="inherit">
-                                    上传文件
+                                    {t("fileManager.uploadFiles")}
                                 </Typography>
                             </MenuItem>
                             <MenuItem
@@ -349,7 +369,7 @@ class ContextMenuCompoment extends Component {
                                     <FolderUpload />
                                 </StyledListItemIcon>
                                 <Typography variant="inherit">
-                                    上传目录
+                                    {t("fileManager.uploadFolder")}
                                 </Typography>
                             </MenuItem>
                             {user.group.allowRemoteDownload && (
@@ -363,7 +383,7 @@ class ContextMenuCompoment extends Component {
                                         <DownloadIcon />
                                     </StyledListItemIcon>
                                     <Typography variant="inherit">
-                                        离线下载
+                                        {t("fileManager.newRemoteDownloads")}
                                     </Typography>
                                 </MenuItem>
                             )}
@@ -379,7 +399,7 @@ class ContextMenuCompoment extends Component {
                                     <NewFolderIcon />
                                 </StyledListItemIcon>
                                 <Typography variant="inherit">
-                                    创建文件夹
+                                    {t("fileManager.newFolder")}
                                 </Typography>
                             </MenuItem>
                             <MenuItem
@@ -392,7 +412,7 @@ class ContextMenuCompoment extends Component {
                                     <FilePlus />
                                 </StyledListItemIcon>
                                 <Typography variant="inherit">
-                                    创建文件
+                                    {t("fileManager.newFile")}
                                 </Typography>
                             </MenuItem>
                         </div>
@@ -406,7 +426,7 @@ class ContextMenuCompoment extends Component {
                                             <OpenFolderIcon />
                                         </StyledListItemIcon>
                                         <Typography variant="inherit">
-                                            进入
+                                            {t("fileManager.enter")}
                                         </Typography>
                                     </MenuItem>
                                     {isHomePage && (
@@ -430,11 +450,29 @@ class ContextMenuCompoment extends Component {
                                                 <OpenIcon />
                                             </StyledListItemIcon>
                                             <Typography variant="inherit">
-                                                打开
+                                                {t("fileManager.open")}
                                             </Typography>
                                         </MenuItem>
                                     </div>
                                 )}
+
+                            {this.props.search && !this.props.isMultiple && (
+                                <div>
+                                    <MenuItem
+                                        dense
+                                        onClick={() =>
+                                            this.props.openParentFolder()
+                                        }
+                                    >
+                                        <StyledListItemIcon>
+                                            <OpenFolderIcon />
+                                        </StyledListItemIcon>
+                                        <Typography variant="inherit">
+                                            {t("fileManager.openParentFolder")}
+                                        </Typography>
+                                    </MenuItem>
+                                </div>
+                            )}
 
                             {!this.props.isMultiple && this.props.withFile && (
                                 <div>
@@ -448,7 +486,7 @@ class ContextMenuCompoment extends Component {
                                             <DownloadIcon />
                                         </StyledListItemIcon>
                                         <Typography variant="inherit">
-                                            下载
+                                            {t("fileManager.download")}
                                         </Typography>
                                     </MenuItem>
                                     {isHomePage && (
@@ -456,6 +494,24 @@ class ContextMenuCompoment extends Component {
                                     )}
                                 </div>
                             )}
+
+                            {(this.props.isMultiple || this.props.withFolder) &&
+                                window.showDirectoryPicker &&
+                                window.isSecureContext && (
+                                    <MenuItem
+                                        dense
+                                        onClick={() =>
+                                            this.openDirectoryDownload()
+                                        }
+                                    >
+                                        <StyledListItemIcon>
+                                            <FolderDownload />
+                                        </StyledListItemIcon>
+                                        <Typography variant="inherit">
+                                            {t("fileManager.download")}
+                                        </Typography>
+                                    </MenuItem>
+                                )}
 
                             {(this.props.isMultiple ||
                                 this.props.withFolder) && (
@@ -467,7 +523,7 @@ class ContextMenuCompoment extends Component {
                                         <DownloadIcon />
                                     </StyledListItemIcon>
                                     <Typography variant="inherit">
-                                        打包下载
+                                        {t("fileManager.batchDownload")}
                                     </Typography>
                                 </MenuItem>
                             )}
@@ -488,8 +544,12 @@ class ContextMenuCompoment extends Component {
                                             {this.props.isMultiple ||
                                             (this.props.withFolder &&
                                                 !this.props.withFile)
-                                                ? "批量获取外链"
-                                                : "获取外链"}
+                                                ? t(
+                                                      "fileManager.getSourceLinkInBatch"
+                                                  )
+                                                : t(
+                                                      "fileManager.getSourceLink"
+                                                  )}
                                         </Typography>
                                     </MenuItem>
                                 )}
@@ -509,7 +569,9 @@ class ContextMenuCompoment extends Component {
                                             <MagnetOn />
                                         </StyledListItemIcon>
                                         <Typography variant="inherit">
-                                            创建离线下载任务
+                                            {t(
+                                                "fileManager.createRemoteDownloadForTorrent"
+                                            )}
                                         </Typography>
                                     </MenuItem>
                                 )}
@@ -528,7 +590,7 @@ class ContextMenuCompoment extends Component {
                                             <Unarchive />
                                         </StyledListItemIcon>
                                         <Typography variant="inherit">
-                                            解压缩
+                                            {t("fileManager.decompress")}
                                         </Typography>
                                     </MenuItem>
                                 )}
@@ -544,7 +606,7 @@ class ContextMenuCompoment extends Component {
                                         <Archive />
                                     </StyledListItemIcon>
                                     <Typography variant="inherit">
-                                        创建压缩文件
+                                        {t("fileManager.compress")}
                                     </Typography>
                                 </MenuItem>
                             )}
@@ -558,7 +620,7 @@ class ContextMenuCompoment extends Component {
                                         <ShareIcon />
                                     </StyledListItemIcon>
                                     <Typography variant="inherit">
-                                        创建分享链接
+                                        {t("fileManager.createShareLink")}
                                     </Typography>
                                 </MenuItem>
                             )}
@@ -574,7 +636,7 @@ class ContextMenuCompoment extends Component {
                                         <InfoOutlined />
                                     </StyledListItemIcon>
                                     <Typography variant="inherit">
-                                        详细信息
+                                        {t("fileManager.viewDetails")}
                                     </Typography>
                                 </MenuItem>
                             )}
@@ -595,7 +657,7 @@ class ContextMenuCompoment extends Component {
                                             <RenameIcon />
                                         </StyledListItemIcon>
                                         <Typography variant="inherit">
-                                            重命名
+                                            {t("fileManager.rename")}
                                         </Typography>
                                     </MenuItem>
                                     {!this.props.search && (
@@ -609,7 +671,7 @@ class ContextMenuCompoment extends Component {
                                                 <FileCopyIcon />
                                             </StyledListItemIcon>
                                             <Typography variant="inherit">
-                                                复制
+                                                {t("fileManager.copy")}
                                             </Typography>
                                         </MenuItem>
                                     )}
@@ -628,7 +690,7 @@ class ContextMenuCompoment extends Component {
                                                 <MoveIcon />
                                             </StyledListItemIcon>
                                             <Typography variant="inherit">
-                                                移动
+                                                {t("fileManager.move")}
                                             </Typography>
                                         </MenuItem>
                                     )}
@@ -645,7 +707,7 @@ class ContextMenuCompoment extends Component {
                                             <DeleteIcon />
                                         </StyledListItemIcon>
                                         <Typography variant="inherit">
-                                            删除
+                                            {t("fileManager.delete")}
                                         </Typography>
                                     </MenuItem>
                                 </div>
@@ -666,6 +728,6 @@ ContextMenuCompoment.propTypes = {
 const ContextMenu = connect(
     mapStateToProps,
     mapDispatchToProps
-)(withStyles(styles)(withRouter(ContextMenuCompoment)));
+)(withStyles(styles)(withRouter(withTranslation()(ContextMenuCompoment))));
 
 export default ContextMenu;

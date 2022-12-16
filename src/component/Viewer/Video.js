@@ -2,7 +2,7 @@ import React, { Suspense, useCallback, useEffect, useState } from "react";
 import { Button, Paper } from "@material-ui/core";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import { useLocation, useParams, useRouteMatch } from "react-router";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import pathHelper from "../../utils/page";
 import UseFileSubTitle from "../../hooks/fileSubtitle";
 import { getPreviewURL } from "../../middleware/Api";
@@ -17,6 +17,8 @@ import { Launch, PlaylistPlay, Subtitles } from "@material-ui/icons";
 import TextLoading from "../Placeholder/TextLoading";
 import SelectMenu from "./SelectMenu";
 import { getDownloadURL } from "../../services/file";
+import { sortMethodFuncs } from "../../redux/explorer/action";
+import { useTranslation } from "react-i18next";
 
 const Artplayer = React.lazy(() =>
     import(
@@ -56,7 +58,8 @@ const externalPlayers = [
 const useStyles = makeStyles((theme) => ({
     layout: {
         width: "auto",
-        marginTop: "30px",
+        marginTop: 30,
+        marginBottom: 20,
         marginLeft: theme.spacing(3),
         marginRight: theme.spacing(3),
         [theme.breakpoints.up(1100 + theme.spacing(3) * 2)]: {
@@ -64,11 +67,10 @@ const useStyles = makeStyles((theme) => ({
             marginLeft: "auto",
             marginRight: "auto",
         },
-        marginBottom: 50,
     },
     player: {
-        borderRadius: "4px",
-        height: 600,
+        height: "100vh",
+        maxHeight: "calc(100vh - 180px)",
     },
     actions: {
         marginTop: theme.spacing(2),
@@ -77,6 +79,11 @@ const useStyles = makeStyles((theme) => ({
         marginRight: theme.spacing(1),
         marginTop: theme.spacing(1),
     },
+    "@global": {
+        "video,.art-video-player,.art-bottom":{
+            borderRadius: theme.shape.borderRadius,
+        }
+    }
 }));
 
 function useQuery() {
@@ -84,6 +91,7 @@ function useQuery() {
 }
 
 export default function VideoViewer() {
+    const { t } = useTranslation();
     const math = useRouteMatch();
     const location = useLocation();
     const query = useQuery();
@@ -106,6 +114,8 @@ export default function VideoViewer() {
     const [playlistOpen, setPlaylistOpen] = useState(null);
     const [externalPlayerOpen, setExternalPlayerOpen] = useState(null);
     const isShare = pathHelper.isSharePage(location.pathname);
+    const sortMethod = useSelector((state) => state.viewUpdate.sortMethod);
+    const sortFunc = sortMethodFuncs[sortMethod];
 
     useEffect(() => {
         art &&
@@ -154,7 +164,7 @@ export default function VideoViewer() {
                         ""
                     ).then((res) => {
                         setFiles(
-                            res.data.objects.filter((o) => o.type === "file")
+                            res.data.objects.sort(sortFunc).filter((o) => o.type === "file")
                         );
                         setPlaylist(
                             res.data.objects.filter(
@@ -187,27 +197,35 @@ export default function VideoViewer() {
             );
             art.subtitle.show = true;
             setSubtitleSelected(f.name);
-            ToggleSnackbar("top", "center", `字幕切换到：${f.name} `, "info");
+            ToggleSnackbar(
+                "top",
+                "center",
+                t("fileManager.subtitleSwitchTo", {
+                    subtitle: f.name,
+                }),
+                "info"
+            );
         }
     };
 
     useEffect(() => {
         if (files.length > 0) {
+            const fileNameMatch = fileNameNoExt(title) + ".";
             const options = files.filter((f) => {
                 const fileType = f.name.split(".").pop().toLowerCase();
-                if (subtitleSuffix.indexOf(fileType) !== -1) {
-                    if (fileNameNoExt(f.name) === fileNameNoExt(title)) {
-                        switchSubtitle(f);
-                    }
-                    return true;
-                }
-                return false;
+                return subtitleSuffix.indexOf(fileType) !== -1;
+            }).sort((a, b) => {
+                return (a.name.startsWith(fileNameMatch) && !b.name.startsWith(fileNameMatch)) ? -1 : 0;
             });
+            if (options.length > 0 && options[0].name.startsWith(fileNameMatch)) {
+                switchSubtitle(options[0]);
+            }
             setSubtitles(options);
         }
     }, [files]);
 
     const switchVideo = (file) => {
+        setSubtitleSelected(null);
         if (isShare) {
             file.key = id;
         }
@@ -228,7 +246,7 @@ export default function VideoViewer() {
             ToggleSnackbar(
                 "top",
                 "right",
-                `视频目录下没有可用字幕文件 (支持：ASS/SRT/VTT)`,
+                t("fileManager.noSubtitleAvailable"),
                 "warning"
             );
             return;
@@ -276,6 +294,7 @@ export default function VideoViewer() {
                                 "webkit-playsinline": true,
                                 playsInline: true,
                             },
+                            lang: t("artPlayerLocaleCode", { ns: "common" }),
                         }}
                         className={classes.player}
                         getInstance={(a) => setArt(a)}
@@ -289,7 +308,7 @@ export default function VideoViewer() {
                     startIcon={<Subtitles />}
                     variant="outlined"
                 >
-                    选择字幕
+                    {t("fileManager.subtitle")}
                 </Button>
                 {playlist.length >= 2 && (
                     <Button
@@ -298,7 +317,7 @@ export default function VideoViewer() {
                         startIcon={<PlaylistPlay />}
                         variant="outlined"
                     >
-                        播放列表
+                        {t("fileManager.playlist")}
                     </Button>
                 )}
                 <Button
@@ -307,7 +326,7 @@ export default function VideoViewer() {
                     startIcon={<Launch />}
                     variant="outlined"
                 >
-                    用外部播放器打开
+                    {t("fileManager.openInExternalPlayer")}
                 </Button>
             </div>
             <SelectMenu

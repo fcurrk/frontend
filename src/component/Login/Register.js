@@ -11,13 +11,19 @@ import {
     Link,
     makeStyles,
     Paper,
+    TextField,
     Typography,
 } from "@material-ui/core";
-import { useHistory } from "react-router-dom";
+import { Link as RouterLink, useHistory } from "react-router-dom";
 import API from "../../middleware/Api";
 import EmailIcon from "@material-ui/icons/EmailOutlined";
 import { useCaptcha } from "../../hooks/useCaptcha";
 import { toggleSnackbar } from "../../redux/explorer";
+import { useTranslation } from "react-i18next";
+import InputAdornment from "@material-ui/core/InputAdornment";
+import { EmailOutlined, VpnKeyOutlined } from "@material-ui/icons";
+import { useTheme } from "@material-ui/core/styles";
+import useMediaQuery from "@material-ui/core/useMediaQuery";
 
 const useStyles = makeStyles((theme) => ({
     layout: {
@@ -58,16 +64,6 @@ const useStyles = makeStyles((theme) => ({
         width: "100%",
         justifyContent: "space-between",
     },
-    captchaContainer: {
-        display: "flex",
-        marginTop: "10px",
-        [theme.breakpoints.down("sm")]: {
-            display: "block",
-        },
-    },
-    captchaPlaceholder: {
-        width: 200,
-    },
     buttonContainer: {
         display: "flex",
     },
@@ -82,6 +78,8 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function Register() {
+    const { t } = useTranslation();
+
     const [input, setInput] = useState({
         email: "",
         password: "",
@@ -100,6 +98,8 @@ function Register() {
         [dispatch]
     );
     const history = useHistory();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
     const handleInputChange = (name) => (e) => {
         setInput({
@@ -122,7 +122,12 @@ function Register() {
         e.preventDefault();
 
         if (input.password !== input.password_repeat) {
-            ToggleSnackbar("top", "right", "两次密码输入不一致", "warning");
+            ToggleSnackbar(
+                "top",
+                "right",
+                t("login.passwordNotMatch"),
+                "warning"
+            );
             return;
         }
 
@@ -142,7 +147,12 @@ function Register() {
                     setEmailActive(true);
                 } else {
                     history.push("/login?username=" + input.email);
-                    ToggleSnackbar("top", "right", "注册成功", "success");
+                    ToggleSnackbar(
+                        "top",
+                        "right",
+                        t("login.signUpSuccess"),
+                        "success"
+                    );
                 }
             })
             .catch((error) => {
@@ -161,18 +171,26 @@ function Register() {
                             <RegIcon />
                         </Avatar>
                         <Typography component="h1" variant="h5">
-                            注册 {title}
+                            {t("login.sinUpTitle", { title })}
                         </Typography>
 
                         <form className={classes.form} onSubmit={register}>
                             <FormControl margin="normal" required fullWidth>
-                                <InputLabel htmlFor="email">
-                                    电子邮箱
-                                </InputLabel>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    name="email"
+                                <TextField
+                                    variant={"outlined"}
+                                    label={t("login.email")}
+                                    inputProps={{
+                                        name: "email",
+                                        type: "email",
+                                        id: "email",
+                                    }}
+                                    InputProps={{
+                                        startAdornment: !isMobile && (
+                                            <InputAdornment position="start">
+                                                <EmailOutlined />
+                                            </InputAdornment>
+                                        ),
+                                    }}
                                     onChange={handleInputChange("email")}
                                     autoComplete
                                     value={input.email}
@@ -180,27 +198,45 @@ function Register() {
                                 />
                             </FormControl>
                             <FormControl margin="normal" required fullWidth>
-                                <InputLabel htmlFor="password">密码</InputLabel>
-                                <Input
-                                    name="password"
+                                <TextField
+                                    variant={"outlined"}
+                                    label={t("login.password")}
+                                    inputProps={{
+                                        name: "password",
+                                        type: "password",
+                                        id: "password",
+                                    }}
+                                    InputProps={{
+                                        startAdornment: !isMobile && (
+                                            <InputAdornment position="start">
+                                                <VpnKeyOutlined />
+                                            </InputAdornment>
+                                        ),
+                                    }}
                                     onChange={handleInputChange("password")}
-                                    type="password"
-                                    id="password"
                                     value={input.password}
                                     autoComplete
                                 />
                             </FormControl>
                             <FormControl margin="normal" required fullWidth>
-                                <InputLabel htmlFor="password">
-                                    确认密码
-                                </InputLabel>
-                                <Input
-                                    name="pwdRepeat"
+                                <TextField
+                                    label={t("login.repeatPassword")}
+                                    variant={"outlined"}
+                                    inputProps={{
+                                        name: "pwdRepeat",
+                                        type: "password",
+                                        id: "pwdRepeat",
+                                    }}
                                     onChange={handleInputChange(
                                         "password_repeat"
                                     )}
-                                    type="password"
-                                    id="pwdRepeat"
+                                    InputProps={{
+                                        startAdornment: !isMobile && (
+                                            <InputAdornment position="start">
+                                                <VpnKeyOutlined />
+                                            </InputAdornment>
+                                        ),
+                                    }}
                                     value={input.password_repeat}
                                     autoComplete
                                 />
@@ -218,17 +254,21 @@ function Register() {
                                 }
                                 className={classes.submit}
                             >
-                                注册账号
+                                {t("login.signUp")}
                             </Button>
                         </form>
 
                         <Divider />
                         <div className={classes.link}>
                             <div>
-                                <Link href={"/login"}>返回登录</Link>
+                                <Link component={RouterLink} to={"/login"}>
+                                    {t("login.backToSingIn")}
+                                </Link>
                             </div>
                             <div>
-                                <Link href={"/forget"}>忘记密码</Link>
+                                <Link component={RouterLink} to={"/forget"}>
+                                    {t("login.forgetPassword")}
+                                </Link>
                             </div>
                         </div>
                     </Paper>
@@ -239,10 +279,10 @@ function Register() {
                             <EmailIcon />
                         </Avatar>
                         <Typography component="h1" variant="h5">
-                            邮件激活
+                            {t("login.activateTitle")}
                         </Typography>
                         <Typography style={{ marginTop: "10px" }}>
-                            一封激活邮件已经发送至您的邮箱，请访问邮件中的链接以继续完成注册。
+                            {t("login.activateDescription")}
                         </Typography>
                     </Paper>
                 )}

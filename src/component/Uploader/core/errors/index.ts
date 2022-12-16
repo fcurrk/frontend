@@ -6,6 +6,8 @@ import {
     UpyunError,
 } from "../types";
 import { sizeToString } from "../utils";
+import i18next from "../../../../i18n";
+import { AppError } from "../../../../middleware/Api";
 
 export enum UploaderErrorName {
     InvalidFile = "InvalidFile",
@@ -55,7 +57,7 @@ export class UploaderError implements Error {
         this.stack = new Error().stack;
     }
 
-    public Message(i18n: string): string {
+    public Message(): string {
         return this.message;
     }
 
@@ -78,18 +80,18 @@ export class FileValidateError extends UploaderError {
         this.policy = policy;
     }
 
-    public Message(i18n: string): string {
+    public Message(): string {
         if (this.field == "size") {
-            return `文件大小超出存储策略限制（最大：${sizeToString(
-                this.policy.maxSize
-            )}）`;
+            return i18next.t(`uploader.sizeExceedLimitError`, {
+                max: sizeToString(this.policy.maxSize),
+            });
         }
 
-        return `存储策略不支持上传此扩展名的文件（当前支持：${
-            this.policy.allowedSuffix
+        return i18next.t(`uploader.suffixNotAllowedError`, {
+            supported: this.policy.allowedSuffix
                 ? this.policy.allowedSuffix.join(",")
-                : "*"
-        }）`;
+                : "*",
+        });
     }
 }
 
@@ -106,21 +108,18 @@ export class UnknownPolicyError extends UploaderError {
 
 // 后端 API 出错
 export class APIError extends UploaderError {
+    private appError: AppError;
     constructor(
         name: UploaderErrorName,
         message: string,
         protected response: Response<any>
     ) {
         super(name, message);
+        this.appError = new AppError(response.msg, response.code, response.msg);
     }
 
-    public Message(i18n: string): string {
-        let msg = `${this.message}: ${this.response.msg}`;
-        if (this.response.error) {
-            msg += ` (${this.response.error})`;
-        }
-
-        return msg;
+    public Message(): string {
+        return `${this.message}: ${this.appError.message}`;
     }
 
     public Retryable(): boolean {
@@ -136,9 +135,9 @@ export class CreateUploadSessionError extends APIError {
         super(UploaderErrorName.FailedCreateUploadSession, "", response);
     }
 
-    public Message(i18n: string): string {
-        this.message = "无法创建上传会话";
-        return super.Message(i18n);
+    public Message(): string {
+        this.message = i18next.t(`uploader.createUploadSessionError`);
+        return super.Message();
     }
 }
 
@@ -148,9 +147,9 @@ export class DeleteUploadSessionError extends APIError {
         super(UploaderErrorName.FailedDeleteUploadSession, "", response);
     }
 
-    public Message(i18n: string): string {
-        this.message = "无法删除上传会话";
-        return super.Message(i18n);
+    public Message(): string {
+        this.message = i18next.t(`uploader.deleteUploadSessionError`);
+        return super.Message();
     }
 }
 
@@ -162,8 +161,11 @@ export class HTTPError extends UploaderError {
         this.response = axiosErr.response;
     }
 
-    public Message(i18n: string): string {
-        return `请求失败: ${this.axiosErr} (${this.url})`;
+    public Message(): string {
+        return i18next.t(`uploader.requestError`, {
+            msg: this.axiosErr,
+            url: this.url,
+        });
     }
 }
 
@@ -173,9 +175,11 @@ export class LocalChunkUploadError extends APIError {
         super(UploaderErrorName.LocalChunkUploadFailed, "", response);
     }
 
-    public Message(i18n: string): string {
-        this.message = `分片 [${this.chunkIndex}] 上传失败`;
-        return super.Message(i18n);
+    public Message(): string {
+        this.message = i18next.t(`uploader.chunkUploadError`, {
+            index: this.chunkIndex,
+        });
+        return super.Message();
     }
 }
 
@@ -192,9 +196,11 @@ export class SlaveChunkUploadError extends APIError {
         super(UploaderErrorName.SlaveChunkUploadFailed, "", response);
     }
 
-    public Message(i18n: string): string {
-        this.message = `分片 [${this.chunkIndex}] 上传失败`;
-        return super.Message(i18n);
+    public Message(): string {
+        this.message = i18next.t(`uploader.chunkUploadError`, {
+            index: this.chunkIndex,
+        });
+        return super.Message();
     }
 }
 
@@ -207,8 +213,8 @@ export class ProcessingTaskDuplicatedError extends UploaderError {
         );
     }
 
-    public Message(i18n: string): string {
-        return "同名文件的上传任务已经在处理中";
+    public Message(): string {
+        return i18next.t(`uploader.conflictError`);
     }
 }
 
@@ -221,8 +227,24 @@ export class OneDriveChunkError extends UploaderError {
         );
     }
 
-    public Message(i18n: string): string {
-        return `分片上传失败: ${this.message}`;
+    public Message(): string {
+        let msg =  i18next.t(`uploader.chunkUploadErrorWithMsg`, {
+            msg: this.message,
+        });
+
+        if (this.response.error.retryAfterSeconds != undefined){
+            msg += " "+i18next.t(`uploader.chunkUploadErrorWithRetryAfter`, {
+                retryAfter: this.response.error.retryAfterSeconds,
+            })
+        }
+
+        return msg;
+    }
+
+    public Retryable(): boolean {
+        return (
+            super.Retryable() || this.response.error.retryAfterSeconds != undefined
+        );
     }
 }
 
@@ -232,8 +254,8 @@ export class OneDriveEmptyFileSelected extends UploaderError {
         super(UploaderErrorName.OneDriveEmptyFile, "empty file not supported");
     }
 
-    public Message(i18n: string): string {
-        return `暂不支持上传空文件至 OneDrive，请通过创建文件按钮创建空文件`;
+    public Message(): string {
+        return i18next.t("uploader.emptyFileError");
     }
 }
 
@@ -243,9 +265,9 @@ export class OneDriveFinishUploadError extends APIError {
         super(UploaderErrorName.FailedFinishOneDriveUpload, "", response);
     }
 
-    public Message(i18n: string): string {
-        this.message = `无法完成文件上传`;
-        return super.Message(i18n);
+    public Message(): string {
+        this.message = i18next.t("uploader.finishUploadError");
+        return super.Message();
     }
 }
 
@@ -258,8 +280,10 @@ export class S3LikeChunkError extends UploaderError {
         );
     }
 
-    public Message(i18n: string): string {
-        return `分片上传失败: ${this.message}`;
+    public Message(): string {
+        return i18next.t(`uploader.chunkUploadErrorWithMsg`, {
+            msg: this.message,
+        });
     }
 }
 
@@ -272,10 +296,11 @@ export class S3LikeFinishUploadError extends UploaderError {
         );
     }
 
-    public Message(i18n: string): string {
-        return `无法完成文件上传: ${this.message} (${
-            this.response.getElementsByTagName("Code")[0].innerHTML
-        })`;
+    public Message(): string {
+        return i18next.t(`uploader.ossFinishUploadError`, {
+            msg: this.message,
+            code: this.response.getElementsByTagName("Code")[0].innerHTML,
+        });
     }
 }
 
@@ -285,8 +310,10 @@ export class QiniuChunkError extends UploaderError {
         super(UploaderErrorName.QiniuChunkUploadFailed, response.error);
     }
 
-    public Message(i18n: string): string {
-        return `分片上传失败: ${this.message}`;
+    public Message(): string {
+        return i18next.t(`uploader.chunkUploadErrorWithMsg`, {
+            msg: this.message,
+        });
     }
 }
 
@@ -296,8 +323,10 @@ export class QiniuFinishUploadError extends UploaderError {
         super(UploaderErrorName.FailedFinishQiniuUpload, response.error);
     }
 
-    public Message(i18n: string): string {
-        return `无法完成文件上传: ${this.message}`;
+    public Message(): string {
+        return i18next.t(`uploader.finishUploadErrorWithMsg`, {
+            msg: this.message,
+        });
     }
 }
 
@@ -310,10 +339,11 @@ export class COSUploadError extends UploaderError {
         );
     }
 
-    public Message(i18n: string): string {
-        return `上传失败: ${this.message} (${
-            this.response.getElementsByTagName("Code")[0].innerHTML
-        })`;
+    public Message(): string {
+        return i18next.t(`uploader.cosUploadFailed`, {
+            msg: this.message,
+            code: this.response.getElementsByTagName("Code")[0].innerHTML,
+        });
     }
 }
 
@@ -323,9 +353,9 @@ export class COSUploadCallbackError extends APIError {
         super(UploaderErrorName.COSUploadCallbackFailed, "", response);
     }
 
-    public Message(i18n: string): string {
-        this.message = `无法完成文件上传`;
-        return super.Message(i18n);
+    public Message(): string {
+        this.message = i18next.t("uploader.finishUploadError");
+        return super.Message();
     }
 }
 
@@ -335,8 +365,10 @@ export class UpyunUploadError extends UploaderError {
         super(UploaderErrorName.UpyunPostUploadFailed, response.message);
     }
 
-    public Message(i18n: string): string {
-        return `上传失败: ${this.message}`;
+    public Message(): string {
+        return i18next.t("uploader.upyunUploadFailed", {
+            msg: this.message,
+        });
     }
 }
 
@@ -346,9 +378,9 @@ export class S3LikeUploadCallbackError extends APIError {
         super(UploaderErrorName.S3LikeUploadCallbackFailed, "", response);
     }
 
-    public Message(i18n: string): string {
-        this.message = `无法完成文件上传`;
-        return super.Message(i18n);
+    public Message(): string {
+        this.message = i18next.t("uploader.finishUploadError");
+        return super.Message();
     }
 }
 
@@ -358,7 +390,10 @@ export class TransformResponseError extends UploaderError {
         super(UploaderErrorName.FailedTransformResponse, parseError.message);
     }
 
-    public Message(i18n: string): string {
-        return `无法解析响应: ${this.message} (${this.response})`;
+    public Message(): string {
+        return i18next.t("uploader.parseResponseError", {
+            msg: this.message,
+            content: this.response,
+        });
     }
 }

@@ -63,8 +63,17 @@ export default function App() {
                             : themeConfig.palette.primary.main,
                 },
             },
+            shape: {
+                ...themeConfig.shape,
+                borderRadius: 12,
+            },
             overrides: {
                 MuiButton: {
+                    root: {
+                        textTransform: "none",
+                    },
+                },
+                MuiTab: {
                     root: {
                         textTransform: "none",
                     },
@@ -232,11 +241,13 @@ export default function App() {
                             </Route>
 
                             <Route path="*">
-                                <NotFound  msg={t("pageNotFound", { ns: "common" })} />
+                                <NotFound
+                                    msg={t("pageNotFound", { ns: "common" })}
+                                />
                             </Route>
                         </Switch>
                     </main>
-                    <MusicPlayer/>
+                    <MusicPlayer />
                 </div>
             </ThemeProvider>
         </React.Fragment>

@@ -19,7 +19,12 @@ import SezrchBar from "./SearchBar";
 import StorageBar from "./StorageBar";
 import UserAvatar from "./UserAvatar";
 import UserInfo from "./UserInfo";
-import { AccountArrowRight, AccountPlus, LogoutVariant } from "mdi-material-ui";
+import {
+    FolderDownload,
+    AccountArrowRight,
+    AccountPlus,
+    LogoutVariant,
+} from "mdi-material-ui";
 import { withRouter } from "react-router-dom";
 import {
     AppBar,
@@ -28,7 +33,6 @@ import {
     Hidden,
     IconButton,
     List,
-    ListItem,
     ListItemIcon,
     ListItemText,
     SwipeableDrawer,
@@ -36,7 +40,7 @@ import {
     Tooltip,
     Typography,
     withStyles,
-    withTheme,
+    withTheme
 } from "@material-ui/core";
 import Auth from "../../middleware/Auth";
 import API from "../../middleware/Api";
@@ -63,11 +67,23 @@ import {
     showImgPreivew,
     toggleSnackbar,
 } from "../../redux/explorer";
-import { startBatchDownload, startDownload } from "../../redux/explorer/action";
+import {
+    startBatchDownload,
+    startDirectoryDownload,
+    startDownload,
+} from "../../redux/explorer/action";
+import { withTranslation } from "react-i18next";
+import MuiListItem from "@material-ui/core/ListItem";
 
 vhCheck();
 const drawerWidth = 240;
 const drawerWidthMobile = 270;
+
+const ListItem = withStyles((theme) => ({
+    root: {
+        borderRadius:theme.shape.borderRadius,
+    },
+}))(MuiListItem);
 
 const mapStateToProps = (state) => {
     return {
@@ -143,6 +159,9 @@ const mapDispatchToProps = (dispatch) => {
         },
         startBatchDownload: (share) => {
             dispatch(startBatchDownload(share));
+        },
+        startDirectoryDownload: (share) => {
+            dispatch(startDirectoryDownload(share));
         },
         startDownload: (share, file) => {
             dispatch(startDownload(share, file));
@@ -282,6 +301,9 @@ const styles = (theme) => ({
     minStickDrawer: {
         overflowY: "auto",
     },
+    paddingList:{
+        padding:theme.spacing(1),
+    }
 });
 class NavbarCompoment extends Component {
     constructor(props) {
@@ -333,6 +355,10 @@ class NavbarCompoment extends Component {
         this.props.startDownload(this.props.shareInfo, this.props.selected[0]);
     };
 
+    openDirectoryDownload = (e) => {
+        this.props.startDirectoryDownload(this.props.shareInfo);
+    };
+
     archiveDownload = (e) => {
         this.props.startBatchDownload(this.props.shareInfo);
     };
@@ -343,7 +369,7 @@ class NavbarCompoment extends Component {
                 this.props.toggleSnackbar(
                     "top",
                     "right",
-                    "您已退出登录",
+                    this.props.t("login.loggedOut"),
                     "success"
                 );
                 Auth.signout();
@@ -364,7 +390,7 @@ class NavbarCompoment extends Component {
     };
 
     render() {
-        const { classes } = this.props;
+        const { classes, t } = this.props;
         const user = Auth.GetUser(this.props.isLogin);
         const isHomePage = pathHelper.isHomePage(this.props.location.pathname);
         const isSharePage = pathHelper.isSharePage(
@@ -379,7 +405,7 @@ class NavbarCompoment extends Component {
                     <>
                         <div className={classes.minStickDrawer}>
                             <FileTag />
-                            <List>
+                            <List className={classes.paddingList}>
                                 <ListItem
                                     button
                                     key="我的分享"
@@ -392,22 +418,28 @@ class NavbarCompoment extends Component {
                                             className={classes.iconFix}
                                         />
                                     </ListItemIcon>
-                                    <ListItemText primary="我的分享" />
+                                    <ListItemText
+                                        primary={t("navbar.myShare")}
+                                    />
                                 </ListItem>
-                                <ListItem
-                                    button
-                                    key="离线下载"
-                                    onClick={() =>
-                                        this.props.history.push("/aria2?")
-                                    }
-                                >
-                                    <ListItemIcon>
-                                        <DownloadIcon
-                                            className={classes.iconFix}
+                                {user.group.allowRemoteDownload && (
+                                    <ListItem
+                                        button
+                                        key="离线下载"
+                                        onClick={() =>
+                                            this.props.history.push("/aria2?")
+                                        }
+                                    >
+                                        <ListItemIcon>
+                                            <DownloadIcon
+                                                className={classes.iconFix}
+                                            />
+                                        </ListItemIcon>
+                                        <ListItemText
+                                            primary={t("navbar.remoteDownload")}
                                         />
-                                    </ListItemIcon>
-                                    <ListItemText primary="离线下载" />
-                                </ListItem>
+                                    </ListItem>
+                                )}
                                 {user.group.webdav && (
                                     <ListItem
                                         button
@@ -421,7 +453,9 @@ class NavbarCompoment extends Component {
                                                 className={classes.iconFix}
                                             />
                                         </ListItemIcon>
-                                        <ListItemText primary="WebDAV" />
+                                        <ListItemText
+                                            primary={t("navbar.connect")}
+                                        />
                                     </ListItem>
                                 )}
 
@@ -437,7 +471,9 @@ class NavbarCompoment extends Component {
                                             className={classes.iconFix}
                                         />
                                     </ListItemIcon>
-                                    <ListItemText primary="任务队列" />
+                                    <ListItemText
+                                        primary={t("navbar.taskQueue")}
+                                    />
                                 </ListItem>
                                 {pathHelper.isMobile() && (
                                     <>
@@ -456,7 +492,9 @@ class NavbarCompoment extends Component {
                                                     className={classes.iconFix}
                                                 />
                                             </ListItemIcon>
-                                            <ListItemText primary="个人设置" />
+                                            <ListItemText
+                                                primary={t("navbar.setting")}
+                                            />
                                         </ListItem>
 
                                         <ListItem
@@ -469,7 +507,9 @@ class NavbarCompoment extends Component {
                                                     className={classes.iconFix}
                                                 />
                                             </ListItemIcon>
-                                            <ListItemText primary="退出登录" />
+                                            <ListItemText
+                                                primary={t("login.logout")}
+                                            />
                                         </ListItem>
                                     </>
                                 )}
@@ -493,7 +533,7 @@ class NavbarCompoment extends Component {
                                     className={classes.iconFix}
                                 />
                             </ListItemIcon>
-                            <ListItemText primary="登录" />
+                            <ListItemText primary={t("login.signIn")} />
                         </ListItem>
                         {this.props.registerEnabled && (
                             <ListItem
@@ -506,7 +546,7 @@ class NavbarCompoment extends Component {
                                 <ListItemIcon>
                                     <AccountPlus className={classes.iconFix} />
                                 </ListItemIcon>
-                                <ListItemText primary="注册" />
+                                <ListItemText primary={t("login.signUp")} />
                             </ListItem>
                         )}
                     </div>
@@ -605,7 +645,9 @@ class NavbarCompoment extends Component {
                         {this.props.selected.length > 1 &&
                             !pathHelper.isMobile() && (
                                 <Typography variant="h6" color="inherit" noWrap>
-                                    {this.props.selected.length} 个对象
+                                    {t("navbar.objectsSelected", {
+                                        num: this.props.selected.length,
+                                    })}
                                 </Typography>
                             )}
                         {this.props.selected.length === 0 && <SezrchBar />}
@@ -628,7 +670,11 @@ class NavbarCompoment extends Component {
                                                     )
                                                 }
                                             >
-                                                <Tooltip title="打开">
+                                                <Tooltip
+                                                    title={t(
+                                                        "fileManager.open"
+                                                    )}
+                                                >
                                                     <IconButton
                                                         color="inherit"
                                                         onClick={() =>
@@ -651,7 +697,11 @@ class NavbarCompoment extends Component {
                                                     this.props.withFile
                                                 }
                                             >
-                                                <Tooltip title="下载">
+                                                <Tooltip
+                                                    title={t(
+                                                        "fileManager.download"
+                                                    )}
+                                                >
                                                     <IconButton
                                                         color="inherit"
                                                         onClick={() =>
@@ -664,6 +714,35 @@ class NavbarCompoment extends Component {
                                             </Grow>
                                         )}
                                     {(this.props.isMultiple ||
+                                        this.props.withFolder) &&
+                                        window.showDirectoryPicker &&
+                                        window.isSecureContext && (
+                                            <Grow
+                                                in={
+                                                    (this.props.isMultiple ||
+                                                        this.props
+                                                            .withFolder) &&
+                                                    window.showDirectoryPicker &&
+                                                    window.isSecureContext
+                                                }
+                                            >
+                                                <Tooltip
+                                                    title={t(
+                                                        "fileManager.download"
+                                                    )}
+                                                >
+                                                    <IconButton
+                                                        color="inherit"
+                                                        onClick={() =>
+                                                            this.openDirectoryDownload()
+                                                        }
+                                                    >
+                                                        <FolderDownload />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </Grow>
+                                        )}
+                                    {(this.props.isMultiple ||
                                         this.props.withFolder) && (
                                         <Grow
                                             in={
@@ -671,7 +750,11 @@ class NavbarCompoment extends Component {
                                                 this.props.withFolder
                                             }
                                         >
-                                            <Tooltip title="打包下载">
+                                            <Tooltip
+                                                title={t(
+                                                    "fileManager.batchDownload"
+                                                )}
+                                            >
                                                 <IconButton
                                                     color="inherit"
                                                     disableClickAway
@@ -688,7 +771,11 @@ class NavbarCompoment extends Component {
                                         !pathHelper.isMobile() &&
                                         !isSharePage && (
                                             <Grow in={!this.props.isMultiple}>
-                                                <Tooltip title="分享">
+                                                <Tooltip
+                                                    title={t(
+                                                        "fileManager.share"
+                                                    )}
+                                                >
                                                     <IconButton
                                                         color="inherit"
                                                         onClick={() =>
@@ -702,7 +789,9 @@ class NavbarCompoment extends Component {
                                         )}
                                     {!this.props.isMultiple && !isSharePage && (
                                         <Grow in={!this.props.isMultiple}>
-                                            <Tooltip title="重命名">
+                                            <Tooltip
+                                                title={t("fileManager.rename")}
+                                            >
                                                 <IconButton
                                                     color="inherit"
                                                     onClick={() =>
@@ -724,7 +813,11 @@ class NavbarCompoment extends Component {
                                                         !pathHelper.isMobile()
                                                     }
                                                 >
-                                                    <Tooltip title="移动">
+                                                    <Tooltip
+                                                        title={t(
+                                                            "fileManager.move"
+                                                        )}
+                                                    >
                                                         <IconButton
                                                             color="inherit"
                                                             onClick={() =>
@@ -743,7 +836,11 @@ class NavbarCompoment extends Component {
                                                         .length !== 0
                                                 }
                                             >
-                                                <Tooltip title="删除">
+                                                <Tooltip
+                                                    title={t(
+                                                        "fileManager.delete"
+                                                    )}
+                                                >
                                                     <IconButton
                                                         color="inherit"
                                                         onClick={() =>
@@ -763,7 +860,11 @@ class NavbarCompoment extends Component {
                                                         pathHelper.isMobile()
                                                     }
                                                 >
-                                                    <Tooltip title="更多操作">
+                                                    <Tooltip
+                                                        title={t(
+                                                            "fileManager.moreActions"
+                                                        )}
+                                                    >
                                                         <IconButton
                                                             color="inherit"
                                                             onClick={() =>
@@ -786,7 +887,7 @@ class NavbarCompoment extends Component {
                             !(!this.props.isMultiple && this.props.withFile) &&
                             this.props.audioPreviewPlayingName != null && (
                                 <IconButton
-                                    title="音乐"
+                                    title={t("navbar.music")}
                                     className={classes.sideButton}
                                     onClick={this.props.audioPreviewOpen}
                                     color={"inherit"}
@@ -855,6 +956,10 @@ NavbarCompoment.propTypes = {
 const Navbar = connect(
     mapStateToProps,
     mapDispatchToProps
-)(withTheme(withStyles(styles)(withRouter(NavbarCompoment))));
+)(
+    withTheme(
+        withStyles(styles)(withRouter(withTranslation()(NavbarCompoment)))
+    )
+);
 
 export default Navbar;

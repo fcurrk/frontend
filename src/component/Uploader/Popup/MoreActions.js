@@ -17,7 +17,8 @@ import { DeleteEmpty } from "mdi-material-ui";
 import DeleteIcon from "@material-ui/icons/Delete";
 import ConcurrentOptionDialog from "../../Modals/ConcurrentOption";
 import Auth from "../../../middleware/Auth";
-import { ClearAll } from "@material-ui/icons";
+import { ClearAll, Replay } from "@material-ui/icons";
+import { useTranslation } from "react-i18next";
 
 const useStyles = makeStyles((theme) => ({
     icon: {
@@ -37,7 +38,9 @@ export default function MoreActions({
     sorter,
     setSorter,
     cleanFinished,
+    retryFailed,
 }) {
+    const { t } = useTranslation("application", { keyPrefix: "uploader" });
     const classes = useStyles();
     const dispatch = useDispatch();
     const [concurrentDialog, setConcurrentDialog] = useState(false);
@@ -46,9 +49,10 @@ export default function MoreActions({
             dispatch(toggleSnackbar(vertical, horizontal, msg, color)),
         [dispatch]
     );
-    const RefreshStorage = useCallback(() => dispatch(refreshStorage()), [
-        dispatch,
-    ]);
+    const RefreshStorage = useCallback(
+        () => dispatch(refreshStorage()),
+        [dispatch]
+    );
 
     const actionClicked = (next) => () => {
         onClose();
@@ -60,7 +64,12 @@ export default function MoreActions({
         API.delete("/file/upload")
             .then((response) => {
                 if (response.rawData.code === 0) {
-                    ToggleSnackbar("top", "right", "上传会话已清除", "success");
+                    ToggleSnackbar(
+                        "top",
+                        "right",
+                        t("uploadSessionCleaned"),
+                        "success"
+                    );
                 } else {
                     ToggleSnackbar(
                         "top",
@@ -83,60 +92,67 @@ export default function MoreActions({
     const listItems = useMemo(
         () => [
             {
-                tooltip: "列表中不显示已完成、失败、被取消的任务",
+                tooltip: t("hideCompletedTooltip"),
                 onClick: () =>
                     setFilter(filter === "default" ? "ongoing" : "default"),
                 icon: filter !== "default" ? <CheckIcon /> : <Icon />,
-                text: "隐藏已完成任务",
+                text: t("hideCompleted"),
                 divider: true,
             },
             {
-                tooltip: "最先添加的任务排在最前",
+                tooltip: t("addTimeAscTooltip"),
                 onClick: () => setSorter("default"),
                 icon: sorter === "default" ? <CheckIcon /> : <Icon />,
-                text: "最先添加靠前",
+                text: t("addTimeAsc"),
                 divider: false,
             },
             {
-                tooltip: "最后添加的任务排在最前",
+                tooltip: t("addTimeDescTooltip"),
                 onClick: () => setSorter("reverse"),
                 icon: sorter === "reverse" ? <CheckIcon /> : <Icon />,
-                text: "最后添加靠前",
+                text: t("addTimeDesc"),
                 divider: true,
             },
             {
-                tooltip: "单个任务上传速度展示为瞬时速度",
+                tooltip: t("showInstantSpeedTooltip"),
                 onClick: () => setUseAvgSpeed(false),
                 icon: useAvgSpeed ? <Icon /> : <CheckIcon />,
-                text: "瞬时速度",
+                text: t("showInstantSpeed"),
                 divider: false,
             },
             {
-                tooltip: "单个任务上传速度展示为平均速度",
+                tooltip: t("showAvgSpeedTooltip"),
                 onClick: () => setUseAvgSpeed(true),
                 icon: !useAvgSpeed ? <Icon /> : <CheckIcon />,
-                text: "平均速度",
+                text: t("showAvgSpeed"),
                 divider: true,
             },
             {
-                tooltip: "清空服务端所有未完成的上传会话",
+                tooltip: t("cleanAllSessionTooltip"),
                 onClick: () => cleanupSessions(),
                 icon: <DeleteEmpty />,
-                text: "清空所有上传会话",
+                text: t("cleanAllSession"),
                 divider: false,
             },
             {
-                tooltip: "清除列表中已完成、失败、被取消的任务",
+                tooltip: t("cleanCompletedTooltip"),
                 onClick: () => cleanFinished(),
                 icon: <DeleteIcon />,
-                text: "清除已完成任务",
+                text: t("cleanCompleted"),
+                divider: false,
+            },
+            {
+                tooltip: t("retryFailedTasksTooltip"),
+                onClick: () => retryFailed(),
+                icon: <Replay />,
+                text: t("retryFailedTasks"),
                 divider: true,
             },
             {
-                tooltip: "清除列表中已完成、失败、被取消的任务",
+                tooltip: t("setConcurrentTooltip"),
                 onClick: () => setConcurrentDialog(true),
                 icon: <ClearAll />,
-                text: "设置并行数量",
+                text: t("setConcurrent"),
                 divider: false,
             },
         ],

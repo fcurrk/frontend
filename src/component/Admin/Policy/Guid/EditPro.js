@@ -15,8 +15,10 @@ import React, { useCallback, useState } from "react";
 import { useDispatch } from "react-redux";
 import { toggleSnackbar } from "../../../../redux/explorer";
 import API from "../../../../middleware/Api";
+import { useTranslation } from "react-i18next";
 
 export default function EditPro(props) {
+    const { t } = useTranslation("dashboard", { keyPrefix: "policy" });
     const [, setLoading] = useState(false);
     const [policy, setPolicy] = useState(props.policy);
 
@@ -60,6 +62,12 @@ export default function EditPro(props) {
         policyCopy.OptionsSerialized.chunk_size = parseInt(
             policyCopy.OptionsSerialized.chunk_size
         );
+        policyCopy.OptionsSerialized.tps_limit = parseFloat(
+            policyCopy.OptionsSerialized.tps_limit
+        );
+        policyCopy.OptionsSerialized.tps_limit_burst = parseInt(
+            policyCopy.OptionsSerialized.tps_limit_burst
+        );
         policyCopy.OptionsSerialized.placeholder_with_size =
             policyCopy.OptionsSerialized.placeholder_with_size === "true";
         policyCopy.OptionsSerialized.file_type = policyCopy.OptionsSerialized.file_type.split(
@@ -79,7 +87,7 @@ export default function EditPro(props) {
                 ToggleSnackbar(
                     "top",
                     "right",
-                    "存储策略已" + (props.policy ? "保存" : "添加"),
+                    props.policy ? t("policySaved") : t("policyAdded"),
                     "success"
                 );
             })
@@ -95,35 +103,35 @@ export default function EditPro(props) {
 
     return (
         <div>
-            <Typography variant={"h6"}>编辑存储策略</Typography>
+            <Typography variant={"h6"}>{t("editPolicy")}</Typography>
             <TableContainer>
                 <form onSubmit={submitPolicy}>
                     <Table aria-label="simple table">
                         <TableHead>
                             <TableRow>
-                                <TableCell>设置项</TableCell>
-                                <TableCell>值</TableCell>
-                                <TableCell>描述</TableCell>
+                                <TableCell>{t("setting")}</TableCell>
+                                <TableCell>{t("value")}</TableCell>
+                                <TableCell>{t("description")}</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             <TableRow>
                                 <TableCell component="th" scope="row">
-                                    ID
+                                    {t("id")}
                                 </TableCell>
                                 <TableCell>{policy.ID}</TableCell>
-                                <TableCell>存储策略编号</TableCell>
+                                <TableCell>{t("policyID")}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" scope="row">
-                                    类型
+                                    {t("type")}
                                 </TableCell>
                                 <TableCell>{policy.Type}</TableCell>
-                                <TableCell>存储策略类型</TableCell>
+                                <TableCell>{t("policyType")}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" scope="row">
-                                    名称
+                                    {t("name")}
                                 </TableCell>
                                 <TableCell>
                                     <FormControl>
@@ -134,11 +142,11 @@ export default function EditPro(props) {
                                         />
                                     </FormControl>
                                 </TableCell>
-                                <TableCell>存储策名称</TableCell>
+                                <TableCell>{t("policyName")}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" scope="row">
-                                    Server
+                                    {t("server")}
                                 </TableCell>
                                 <TableCell>
                                     <FormControl>
@@ -152,7 +160,7 @@ export default function EditPro(props) {
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" scope="row">
-                                    BucketName
+                                    {t("bucketName")}
                                 </TableCell>
                                 <TableCell>
                                     <FormControl>
@@ -164,11 +172,11 @@ export default function EditPro(props) {
                                         />
                                     </FormControl>
                                 </TableCell>
-                                <TableCell>存储桶标识</TableCell>
+                                <TableCell>{t("bucketID")}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" scope="row">
-                                    私有空间
+                                    {t("privateBucket")}
                                 </TableCell>
                                 <TableCell>
                                     <FormControl>
@@ -183,23 +191,23 @@ export default function EditPro(props) {
                                                 control={
                                                     <Radio color={"primary"} />
                                                 }
-                                                label="是"
+                                                label={t("yes")}
                                             />
                                             <FormControlLabel
                                                 value={"false"}
                                                 control={
                                                     <Radio color={"primary"} />
                                                 }
-                                                label="否"
+                                                label={t("no")}
                                             />
                                         </RadioGroup>
                                     </FormControl>
                                 </TableCell>
-                                <TableCell>是否为私有空间</TableCell>
+                                <TableCell>{t("privateBucketDes")}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" scope="row">
-                                    文件资源根URL
+                                    {t("resourceRootURL")}
                                 </TableCell>
                                 <TableCell>
                                     <FormControl>
@@ -209,13 +217,11 @@ export default function EditPro(props) {
                                         />
                                     </FormControl>
                                 </TableCell>
-                                <TableCell>
-                                    预览/获取文件外链时生成URL的前缀
-                                </TableCell>
+                                <TableCell>{t("resourceRootURLDes")}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" scope="row">
-                                    AccessKey
+                                    {t("accessKey")}
                                 </TableCell>
                                 <TableCell>
                                     <FormControl>
@@ -227,11 +233,11 @@ export default function EditPro(props) {
                                         />
                                     </FormControl>
                                 </TableCell>
-                                <TableCell>AccessKey / 刷新Token</TableCell>
+                                <TableCell>{t("akDes")}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" scope="row">
-                                    SecretKey
+                                    {t("secretKey")}
                                 </TableCell>
                                 <TableCell>
                                     <FormControl>
@@ -243,11 +249,11 @@ export default function EditPro(props) {
                                         />
                                     </FormControl>
                                 </TableCell>
-                                <TableCell>SecretKey</TableCell>
+                                <TableCell>{t("secretKey")}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" scope="row">
-                                    最大单文件尺寸 (Bytes)
+                                    {t("maxSizeBytes")}
                                 </TableCell>
                                 <TableCell>
                                     <FormControl>
@@ -262,13 +268,11 @@ export default function EditPro(props) {
                                         />
                                     </FormControl>
                                 </TableCell>
-                                <TableCell>
-                                    最大可上传的文件尺寸，填写为0表示不限制
-                                </TableCell>
+                                <TableCell>{t("maxSizeBytesDes")}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" scope="row">
-                                    自动重命名
+                                    {t("autoRename")}
                                 </TableCell>
                                 <TableCell>
                                     <FormControl>
@@ -285,25 +289,23 @@ export default function EditPro(props) {
                                                 control={
                                                     <Radio color={"primary"} />
                                                 }
-                                                label="是"
+                                                label={t("yes")}
                                             />
                                             <FormControlLabel
                                                 value={"false"}
                                                 control={
                                                     <Radio color={"primary"} />
                                                 }
-                                                label="否"
+                                                label={t("no")}
                                             />
                                         </RadioGroup>
                                     </FormControl>
                                 </TableCell>
-                                <TableCell>
-                                    是否根据规则对上传物理文件重命名
-                                </TableCell>
+                                <TableCell>{t("autoRenameDes")}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" scope="row">
-                                    存储路径
+                                    {t("storagePath")}
                                 </TableCell>
                                 <TableCell>
                                     <FormControl>
@@ -316,11 +318,11 @@ export default function EditPro(props) {
                                         />
                                     </FormControl>
                                 </TableCell>
-                                <TableCell>文件物理存储路径</TableCell>
+                                <TableCell>{t("storagePathDes")}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" scope="row">
-                                    存储文件名
+                                    {t("fileName")}
                                 </TableCell>
                                 <TableCell>
                                     <FormControl>
@@ -333,11 +335,11 @@ export default function EditPro(props) {
                                         />
                                     </FormControl>
                                 </TableCell>
-                                <TableCell>文件物理存储文件名</TableCell>
+                                <TableCell>{t("fileNameDes")}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" scope="row">
-                                    允许获取外链
+                                    {t("allowGetSourceLink")}
                                 </TableCell>
                                 <TableCell>
                                     <FormControl>
@@ -354,25 +356,25 @@ export default function EditPro(props) {
                                                 control={
                                                     <Radio color={"primary"} />
                                                 }
-                                                label="是"
+                                                label={t("yes")}
                                             />
                                             <FormControlLabel
                                                 value={"false"}
                                                 control={
                                                     <Radio color={"primary"} />
                                                 }
-                                                label="否"
+                                                label={t("no")}
                                             />
                                         </RadioGroup>
                                     </FormControl>
                                 </TableCell>
                                 <TableCell>
-                                    是否允许获取外链。注意，某些存储策略类型不支持，即使在此开启，获取的外链也无法使用。
+                                    {t("allowGetSourceLinkDes")}
                                 </TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" scope="row">
-                                    又拍云防盗链 Token
+                                    {t("upyunToken")}
                                 </TableCell>
                                 <TableCell>
                                     <FormControl>
@@ -387,11 +389,11 @@ export default function EditPro(props) {
                                         />
                                     </FormControl>
                                 </TableCell>
-                                <TableCell>仅对又拍云存储策略有效</TableCell>
+                                <TableCell>{t("upyunOnly")}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" scope="row">
-                                    允许文件扩展名
+                                    {t("allowedFileExtension")}
                                 </TableCell>
                                 <TableCell>
                                     <FormControl>
@@ -407,11 +409,11 @@ export default function EditPro(props) {
                                         />
                                     </FormControl>
                                 </TableCell>
-                                <TableCell>留空表示不限制</TableCell>
+                                <TableCell>{t("emptyIsNoLimit")}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" scope="row">
-                                    允许的 MimeType
+                                    {t("allowedMimetype")}
                                 </TableCell>
                                 <TableCell>
                                     <FormControl>
@@ -427,11 +429,11 @@ export default function EditPro(props) {
                                         />
                                     </FormControl>
                                 </TableCell>
-                                <TableCell>仅对七牛存储策略有效</TableCell>
+                                <TableCell>{t("qiniuOnly")}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" scope="row">
-                                    OneDrive 重定向地址
+                                    {t("odRedirectURL")}
                                 </TableCell>
                                 <TableCell>
                                     <FormControl>
@@ -447,11 +449,13 @@ export default function EditPro(props) {
                                         />
                                     </FormControl>
                                 </TableCell>
-                                <TableCell>一般添加后无需修改</TableCell>
+                                <TableCell>
+                                    {t("noModificationNeeded")}
+                                </TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" scope="row">
-                                    OneDrive 反代服务器地址
+                                    {t("odReverseProxy")}
                                 </TableCell>
                                 <TableCell>
                                     <FormControl>
@@ -467,13 +471,11 @@ export default function EditPro(props) {
                                         />
                                     </FormControl>
                                 </TableCell>
-                                <TableCell>
-                                    仅对 OneDrive 存储策略有效
-                                </TableCell>
+                                <TableCell>{t("odOnly")}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" scope="row">
-                                    OneDrive/SharePoint 驱动器资源标识
+                                    {t("odDriverID")}
                                 </TableCell>
                                 <TableCell>
                                     <FormControl>
@@ -489,15 +491,11 @@ export default function EditPro(props) {
                                         />
                                     </FormControl>
                                 </TableCell>
-                                <TableCell>
-                                    仅对 OneDrive
-                                    存储策略有效，留空则使用用户的默认 OneDrive
-                                    驱动器
-                                </TableCell>
+                                <TableCell>{t("odDriverIDDes")}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" scope="row">
-                                    Amazon S3 Region
+                                    {t("s3Region")}
                                 </TableCell>
                                 <TableCell>
                                     <FormControl>
@@ -512,13 +510,11 @@ export default function EditPro(props) {
                                         />
                                     </FormControl>
                                 </TableCell>
-                                <TableCell>
-                                    仅对 Amazon S3 存储策略有效
-                                </TableCell>
+                                <TableCell>{t("s3Only")}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" scope="row">
-                                    内网 EndPoint
+                                    {t("lanEndpoint")}
                                 </TableCell>
                                 <TableCell>
                                     <FormControl>
@@ -534,11 +530,11 @@ export default function EditPro(props) {
                                         />
                                     </FormControl>
                                 </TableCell>
-                                <TableCell>仅对 OSS 存储策略有效</TableCell>
+                                <TableCell>{t("ossOnly")}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" scope="row">
-                                    上传分片大小 (Bytes)
+                                    {t("chunkSizeBytes")}
                                 </TableCell>
                                 <TableCell>
                                     <FormControl>
@@ -558,13 +554,11 @@ export default function EditPro(props) {
                                         />
                                     </FormControl>
                                 </TableCell>
-                                <TableCell>
-                                    分片上传时单个分片的大小，仅部分存储策略支持。
-                                </TableCell>
+                                <TableCell>{t("chunkSizeBytesDes")}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell component="th" scope="row">
-                                    上传前预支用户存储
+                                    {t("placeHolderWithSize")}
                                 </TableCell>
                                 <TableCell>
                                     <FormControl>
@@ -584,21 +578,67 @@ export default function EditPro(props) {
                                                 control={
                                                     <Radio color={"primary"} />
                                                 }
-                                                label="是"
+                                                label={t("yes")}
                                             />
                                             <FormControlLabel
                                                 value={"false"}
                                                 control={
                                                     <Radio color={"primary"} />
                                                 }
-                                                label="否"
+                                                label={t("no")}
                                             />
                                         </RadioGroup>
                                     </FormControl>
                                 </TableCell>
                                 <TableCell>
-                                    是否在上传会话创建时就对用户存储进行预支，仅部分存储策略支持。
+                                    {t("placeHolderWithSizeDes")}
                                 </TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell component="th" scope="row">
+                                    {t("tps")}
+                                </TableCell>
+                                <TableCell>
+                                    <FormControl>
+                                        <Input
+                                            type={"number"}
+                                            inputProps={{
+                                                step: 0.1,
+                                            }}
+                                            value={
+                                                policy.OptionsSerialized
+                                                    .tps_limit
+                                            }
+                                            onChange={handleOptionChange(
+                                                "tps_limit"
+                                            )}
+                                        />
+                                    </FormControl>
+                                </TableCell>
+                                <TableCell>{t("odOnly")}</TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell component="th" scope="row">
+                                    {t("tpsBurst")}
+                                </TableCell>
+                                <TableCell>
+                                    <FormControl>
+                                        <Input
+                                            type={"number"}
+                                            inputProps={{
+                                                step: 1,
+                                            }}
+                                            value={
+                                                policy.OptionsSerialized
+                                                    .tps_limit_burst
+                                            }
+                                            onChange={handleOptionChange(
+                                                "tps_limit_burst"
+                                            )}
+                                        />
+                                    </FormControl>
+                                </TableCell>
+                                <TableCell>{t("odOnly")}</TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>
@@ -608,7 +648,7 @@ export default function EditPro(props) {
                         variant={"contained"}
                         style={{ margin: 8 }}
                     >
-                        保存更改
+                        {t("saveChanges")}
                     </Button>
                 </form>
             </TableContainer>

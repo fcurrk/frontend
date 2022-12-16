@@ -17,13 +17,22 @@ import { push } from "connected-react-router";
 import {
     changeContextMenu,
     closeAllModals,
+    navigateTo,
+    openDirectoryDownloadDialog,
     openGetSourceDialog,
     openLoadingDialog,
+    openTorrentDownloadDialog,
     showAudioPreview,
     showImgPreivew,
     toggleSnackbar,
 } from "./index";
 import { getDownloadURL } from "../../services/file";
+import i18next from "../../i18n";
+import {
+    getFileSystemDirectoryPaths,
+    saveFileToFileSystemDirectory,
+    verifyFileSystemRWPermission,
+} from "../../utils/filesystem";
 
 export interface ActionSetFileList extends AnyAction {
     type: "SET_FILE_LIST";
@@ -105,7 +114,7 @@ export const setShiftSelectedIds = (shiftSelectedIds: any) => {
 };
 
 type SortFunc = (a: CloudreveFile, b: CloudreveFile) => number;
-const sortMethodFuncs: Record<SortMethod, SortFunc> = {
+export const sortMethodFuncs: Record<SortMethod, SortFunc> = {
     sizePos: (a: CloudreveFile, b: CloudreveFile) => {
         return a.size - b.size;
     },
@@ -210,7 +219,9 @@ export const serverSideBatchDownload = (
     share: any
 ): ThunkAction<any, any, any, any> => {
     return (dispatch, getState): void => {
-        dispatch(openLoadingDialog("正在准备打包下载..."));
+        dispatch(
+            openLoadingDialog(i18next.t("fileManager.preparingBathDownload"))
+        );
         const {
             explorer: { selected },
             router: {
@@ -281,12 +292,19 @@ export const startDownload = (
             user &&
             !user.group.shareDownload
         ) {
-            dispatch(toggleSnackbar("top", "right", "请先登录", "warning"));
+            dispatch(
+                toggleSnackbar(
+                    "top",
+                    "right",
+                    i18next.t("share.pleaseLogin"),
+                    "warning"
+                )
+            );
             return;
         }
 
         dispatch(changeContextMenu("file", false));
-        dispatch(openLoadingDialog("获取下载地址..."));
+        dispatch(openLoadingDialog(i18next.t("fileManager.preparingDownload")));
         try {
             const res = await getDownloadURL(file ? file : share);
             window.location.assign(res.data);
@@ -316,18 +334,24 @@ export const startBatchDownload = (
                         [
                             {
                                 key: "client",
-                                name: "浏览器端打包",
-                                description:
-                                    "由浏览器实时下载并打包，并非所有环境都支持。",
+                                name: i18next.t(
+                                    "fileManager.browserBatchDownload"
+                                ),
+                                description: i18next.t(
+                                    "fileManager.browserBatchDownloadDescription"
+                                ),
                             },
                             {
                                 key: "server",
-                                name: "服务端中转打包",
-                                description:
-                                    "由服务端中转打包并实时发送到客户端下载。",
+                                name: i18next.t(
+                                    "fileManager.serverBatchDownload"
+                                ),
+                                description: i18next.t(
+                                    "fileManager.serverBatchDownloadDescription"
+                                ),
                             },
                         ],
-                        "选择打包下载方式"
+                        i18next.t("fileManager.selectArchiveMethod")
                     )
                 );
             } catch (e) {
@@ -340,7 +364,7 @@ export const startBatchDownload = (
             }
         }
 
-        dispatch(openLoadingDialog("列取文件中..."));
+        dispatch(openLoadingDialog(i18next.t("modals.listingFiles")));
 
         let queue: CloudreveFile[] = [];
         try {
@@ -350,7 +374,9 @@ export const startBatchDownload = (
                 toggleSnackbar(
                     "top",
                     "right",
-                    `列取文件时出错：${e.message}`,
+                    i18next.t("modals.listingFileError", {
+                        message: e.message,
+                    }),
                     "warning"
                 )
             );
@@ -363,7 +389,7 @@ export const startBatchDownload = (
             toggleSnackbar(
                 "top",
                 "center",
-                `打包下载已开始，请不要关闭此标签页`,
+                i18next.t("fileManager.batchDownloadStarted"),
                 "info"
             )
         );
@@ -415,12 +441,315 @@ export const startBatchDownload = (
                     toggleSnackbar(
                         "top",
                         "right",
-                        `打包遇到错误：${e && e.message}`,
+                        i18next.t("modals.batchDownloadError", {
+                            message: e && e.message,
+                        }),
                         "warning"
                     );
                     dispatch(closeAllModals());
                 });
         }
+    };
+};
+
+let directoryDownloadAbortController: AbortController;
+export const cancelDirectoryDownload = () =>
+    directoryDownloadAbortController.abort();
+
+export const startDirectoryDownload = (
+    share: any
+): ThunkAction<any, any, any, any> => {
+    return async (dispatch, getState): Promise<void> => {
+        dispatch(changeContextMenu("file", false));
+
+        directoryDownloadAbortController = new AbortController();
+        if (!window.showDirectoryPicker || !window.isSecureContext) {
+            return;
+        }
+        let handle: FileSystemDirectoryHandle;
+        // we should show directory picker at first
+        // https://web.dev/file-system-access/#:~:text=handle%3B%0A%7D-,Gotchas,-Sometimes%20processing%20the
+        try {
+            // can't use suggestedName for showDirectoryPicker (only available showSaveFilePicker)
+            handle = await window.showDirectoryPicker({
+                startIn: "downloads",
+                mode: "readwrite",
+            });
+            // we should obtain the readwrite permission for the directory at first
+            if (!(await verifyFileSystemRWPermission(handle))) {
+                throw new Error(
+                    i18next.t("fileManager.directoryDownloadPermissionError")
+                );
+            }
+            dispatch(closeAllModals());
+        } catch (e) {
+            dispatch(
+                toggleSnackbar(
+                    "top",
+                    "right",
+                    i18next.t("modals.directoryDownloadError", {
+                        msg: e && e.message,
+                    }),
+                    "error"
+                )
+            );
+            dispatch(closeAllModals());
+            return;
+        }
+
+        const {
+            explorer: { selected },
+            navigator: { path },
+        } = getState();
+
+        // list files to download
+        dispatch(openLoadingDialog(i18next.t("modals.listingFiles")));
+
+        let queue: CloudreveFile[] = [];
+        try {
+            queue = await walk(selected, share);
+        } catch (e) {
+            dispatch(
+                toggleSnackbar(
+                    "top",
+                    "right",
+                    i18next.t("modals.listingFileError", {
+                        message: e.message,
+                    }),
+                    "warning"
+                )
+            );
+            dispatch(closeAllModals());
+            return;
+        }
+
+        dispatch(closeAllModals());
+
+        let failed = 0;
+        let option: any;
+        // preparation for downloading
+        // get the files in the directory to compare with queue files
+        // parent: ""
+        const fsPaths = await getFileSystemDirectoryPaths(handle, "");
+
+        // path: / or /abc (no sep suffix)
+        // file.path: /abc/d (no sep suffix)
+        // fsPaths: ["abc/d/e.bin",]
+        const duplicates = queue
+            .map((file) =>
+                trimPrefix(
+                    `${file.path}/${file.name}`,
+                    path === "/" ? "/" : path + "/"
+                )
+            )
+            .filter((path) => fsPaths.includes(path));
+
+        // we should ask users for the duplication handle method
+        if (duplicates.length > 0) {
+            try {
+                option = await dispatch(
+                    askForOption(
+                        [
+                            {
+                                key: "replace",
+                                name: i18next.t(
+                                    "fileManager.directoryDownloadReplace"
+                                ),
+                                description: i18next.t(
+                                    "fileManager.directoryDownloadReplaceDescription",
+                                    {
+                                        // display the first three duplications
+                                        duplicates: duplicates
+                                            .slice(
+                                                0,
+                                                duplicates.length >= 3
+                                                    ? 3
+                                                    : duplicates.length
+                                            )
+                                            .join(", "),
+                                        num: duplicates.length,
+                                    }
+                                ),
+                            },
+                            {
+                                key: "skip",
+                                name: i18next.t(
+                                    "fileManager.directoryDownloadSkip"
+                                ),
+                                description: i18next.t(
+                                    "fileManager.directoryDownloadSkipDescription",
+                                    {
+                                        duplicates: duplicates
+                                            .slice(
+                                                0,
+                                                duplicates.length >= 3
+                                                    ? 3
+                                                    : duplicates.length
+                                            )
+                                            .join(", "),
+                                        num: duplicates.length,
+                                    }
+                                ),
+                            },
+                        ],
+                        i18next.t(
+                            "fileManager.selectDirectoryDuplicationMethod"
+                        )
+                    )
+                );
+            } catch (e) {
+                return;
+            }
+        }
+        dispatch(closeAllModals());
+
+        // start the download
+        dispatch(
+            toggleSnackbar(
+                "top",
+                "center",
+                i18next.t("fileManager.directoryDownloadStarted"),
+                "info"
+            )
+        );
+
+        const updateLog = (log, done) => {
+            dispatch(openDirectoryDownloadDialog(true, log, done));
+        };
+        let log = "";
+
+        while (queue.length > 0) {
+            const next = queue.pop();
+            if (next && next.type === "file") {
+                // donload url
+                const previewPath = getPreviewPath(next);
+                const url =
+                    getBaseURL() +
+                    (pathHelper.isSharePage(location.pathname)
+                        ? "/share/preview/" +
+                          share.key +
+                          (previewPath !== "" ? "?path=" + previewPath : "")
+                        : "/file/preview/" + next.id);
+
+                // path to save this file
+                // path: / or /abc (no sep suffix)
+                // next.path: /abc/d (no sep suffix)
+                // name: d/e.bin
+                const name = trimPrefix(
+                    pathJoin([next.path, next.name]),
+                    path === "/" ? "/" : path + "/"
+                );
+                // TODO: improve the display of log
+                // can we turn the upload queue component to the transition queue?
+                // then we can easily cancel or retry the download
+                // and the batch download queue can show as well.
+                log =
+                    (log === "" ? "" : log + "\n\n") +
+                    i18next.t("modals.directoryDownloadStarted", { name });
+                updateLog(log, false);
+                try {
+                    if (duplicates.includes(name)) {
+                        if (option.key === "skip") {
+                            log +=
+                                "\n" +
+                                i18next.t(
+                                    "modals.directoryDownloadSkipNotifiction",
+                                    {
+                                        name,
+                                    }
+                                );
+                            updateLog(log, false);
+                            continue;
+                        } else {
+                            log +=
+                                "\n" +
+                                i18next.t(
+                                    "modals.directoryDownloadReplaceNotifiction",
+                                    {
+                                        name,
+                                    }
+                                );
+                            updateLog(log, false);
+                        }
+                    }
+
+                    // TODO: need concurrent task queue?
+                    const res = await fetch(url, {
+                        cache: "no-cache",
+                        signal: directoryDownloadAbortController.signal,
+                    });
+                    await saveFileToFileSystemDirectory(
+                        handle,
+                        await res.blob(),
+                        name
+                    );
+                    log += "\n" + i18next.t("modals.directoryDownloadFinished");
+                    updateLog(log, false);
+                } catch (e) {
+                    if (e.name === "AbortError") {
+                        dispatch(
+                            toggleSnackbar(
+                                "top",
+                                "right",
+                                i18next.t("modals.directoryDownloadCancelled"),
+                                "warning"
+                            )
+                        );
+                        log +=
+                            "\n\n" +
+                            i18next.t("modals.directoryDownloadCancelled");
+                        updateLog(log, true);
+                        return;
+                    }
+
+                    failed++;
+                    dispatch(
+                        toggleSnackbar(
+                            "top",
+                            "right",
+                            i18next.t(
+                                "modals.directoryDownloadErrorNotification",
+                                {
+                                    name,
+                                    msg: e && e.message,
+                                }
+                            ),
+                            "warning"
+                        )
+                    );
+                    log +=
+                        "\n" +
+                        i18next.t("modals.directoryDownloadError", {
+                            msg: e.message,
+                        });
+                    updateLog(log, false);
+                }
+            }
+        }
+        log +=
+            "\n" +
+            (failed === 0
+                ? i18next.t("fileManager.directoryDownloadFinished")
+                : i18next.t("fileManager.directoryDownloadFinishedWithError", {
+                      failed,
+                  }));
+        updateLog(log, true);
+
+        dispatch(
+            toggleSnackbar(
+                "top",
+                "center",
+                failed === 0
+                    ? i18next.t("fileManager.directoryDownloadFinished")
+                    : i18next.t(
+                          "fileManager.directoryDownloadFinishedWithError",
+                          {
+                              failed,
+                          }
+                      ),
+                "success"
+            )
+        );
     };
 };
 
@@ -466,7 +795,14 @@ export const openPreview = (share: any) => {
         if (isShare) {
             const user = Auth.GetUser();
             if (!Auth.Check() && user && !user.group.shareDownload) {
-                dispatch(toggleSnackbar("top", "right", "请先登录", "warning"));
+                dispatch(
+                    toggleSnackbar(
+                        "top",
+                        "right",
+                        i18next.t("share.pleaseLogin"),
+                        "warning"
+                    )
+                );
                 dispatch(changeContextMenu("file", false));
                 return;
             }
@@ -516,13 +852,8 @@ export const selectFile = (file: any, event: any, fileIndex: any) => {
         }
         const isMacbook = isMac();
         const { explorer } = getState();
-        const {
-            selected,
-            lastSelect,
-            dirList,
-            fileList,
-            shiftSelectedIds,
-        } = explorer;
+        const { selected, lastSelect, dirList, fileList, shiftSelectedIds } =
+            explorer;
         if (shiftKey && !ctrlKey && !metaKey && selected.length !== 0) {
             // shift 多选
             // 取消原有选择
@@ -639,20 +970,22 @@ export const submitDecompressTask = (path: string) => {
                         [
                             {
                                 key: "",
-                                name: "缺省",
+                                name: i18next.t("modals.defaultEncoding"),
                             },
                             {
                                 key: "gb18030",
                                 name: "GB18030",
-                                description: "中文常见编码",
+                                description: i18next.t(
+                                    "modals.chineseMajorEncoding"
+                                ),
                             },
                             ...allOptions,
                         ],
-                        "选择 ZIP 文件特殊字符编码"
+                        i18next.t("modals.selectEncoding")
                     )
                 );
             } catch (e) {
-                throw new Error("未选择编码方式");
+                throw new Error(i18next.t("modals.noEncodingSelected"));
             }
 
             encoding = option.key;
@@ -676,7 +1009,7 @@ export const batchGetSource = (): ThunkAction<any, any, any, any> => {
         } = getState();
 
         if (selected.findIndex((f) => f.type === "dir") >= 0) {
-            dispatch(openLoadingDialog("列取文件中..."));
+            dispatch(openLoadingDialog(i18next.t("modals.listingFiles")));
         }
 
         let queue: CloudreveFile[] = [];
@@ -687,7 +1020,9 @@ export const batchGetSource = (): ThunkAction<any, any, any, any> => {
                 toggleSnackbar(
                     "top",
                     "right",
-                    `列取文件时出错：${e.message}`,
+                    i18next.t("modals.listingFileError", {
+                        message: e.message,
+                    }),
                     "warning"
                 )
             );
@@ -695,7 +1030,7 @@ export const batchGetSource = (): ThunkAction<any, any, any, any> => {
             return;
         }
 
-        dispatch(openLoadingDialog("生成外链中..."));
+        dispatch(openLoadingDialog(i18next.t("modals.generatingSourceLinks")));
 
         const items = queue
             .filter((value) => value.source_enabled && value.type === "file")
@@ -706,7 +1041,7 @@ export const batchGetSource = (): ThunkAction<any, any, any, any> => {
                 toggleSnackbar(
                     "top",
                     "right",
-                    `没有可以生成外链的文件`,
+                    i18next.t("modals.noFileCanGenerateSourceLink"),
                     "warning"
                 )
             );
@@ -720,7 +1055,9 @@ export const batchGetSource = (): ThunkAction<any, any, any, any> => {
                 toggleSnackbar(
                     "top",
                     "right",
-                    `当前用户组最大可同时为 ${user.group.sourceBatch} 个文件生成外链`,
+                    i18next.t("modals.sourceBatchSizeExceeded", {
+                        limit: user.group.sourceBatch,
+                    }),
                     "warning"
                 )
             );
@@ -730,8 +1067,19 @@ export const batchGetSource = (): ThunkAction<any, any, any, any> => {
 
         API.post("/file/source", { items: items })
             .then((response) => {
-                console.log(response);
                 dispatch(closeAllModals());
+                if (response.data.length == 1 && response.data[0].error) {
+                    dispatch(
+                        toggleSnackbar(
+                            "top",
+                            "right",
+                            response.data[0].error,
+                            "warning"
+                        )
+                    );
+                    return;
+                }
+
                 dispatch(
                     openGetSourceDialog(
                         response.data.length == 1
@@ -746,6 +1094,45 @@ export const batchGetSource = (): ThunkAction<any, any, any, any> => {
                                   .join("\n")
                     )
                 );
+            })
+            .catch((error) => {
+                dispatch(
+                    toggleSnackbar("top", "right", error.message, "warning")
+                );
+                dispatch(closeAllModals());
+            });
+    };
+};
+
+export const openTorrentDownload = (): ThunkAction<any, any, any, any> => {
+    return (dispatch, getState): void => {
+        const {
+            explorer: { selected },
+        } = getState();
+        dispatch(openTorrentDownloadDialog(selected[0]));
+    };
+};
+
+export const openParentFolder = (): ThunkAction<any, any, any, any> => {
+    return async (dispatch, getState): Promise<any> => {
+        const {
+            explorer: { selected },
+        } = getState();
+
+        dispatch(openLoadingDialog(i18next.t("modals.processing")));
+        API.get(
+            "/object/property/" +
+            selected[0].id +
+            "?trace_root=true&is_folder=" +
+            (selected[0].type === "dir").toString()
+        )
+            .then((response) => {
+                const path =
+                    response.data.path === ""
+                        ? selected[0].path
+                        : response.data.path;
+                dispatch(navigateTo(path));
+                dispatch(closeAllModals());
             })
             .catch((error) => {
                 dispatch(

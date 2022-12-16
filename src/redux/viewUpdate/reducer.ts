@@ -1,6 +1,6 @@
 import { AnyAction } from "redux";
 import Auth from "../../middleware/Auth";
-import { SortMethod } from "../../types";
+import { CloudreveFile, SortMethod } from "../../types";
 
 export interface ViewUpdateState {
     isLogin: boolean;
@@ -27,7 +27,7 @@ export interface ViewUpdateState {
         share: boolean;
         music: boolean;
         remoteDownload: boolean;
-        torrentDownload: boolean;
+        remoteDownloadTorrent: CloudreveFile | null;
         getSource: string;
         copy: boolean;
         resave: boolean;
@@ -35,6 +35,9 @@ export interface ViewUpdateState {
         decompress: boolean;
         loading: boolean;
         loadingText: string;
+        directoryDownloading: boolean;
+        directoryDownloadLog: string;
+        directoryDownloadDone: boolean;
         option?: {
             options: {
                 open: boolean;
@@ -88,7 +91,7 @@ export const initState: ViewUpdateState = {
         share: false,
         music: false,
         remoteDownload: false,
-        torrentDownload: false,
+        remoteDownloadTorrent: null,
         getSource: "",
         copy: false,
         resave: false,
@@ -96,6 +99,9 @@ export const initState: ViewUpdateState = {
         decompress: false,
         loading: false,
         loadingText: "",
+        directoryDownloading: false,
+        directoryDownloadLog: "",
+        directoryDownloadDone: false,
     },
     snackbar: {
         toggle: false,
@@ -206,7 +212,8 @@ const viewUpdate = (state: ViewUpdateState = initState, action: AnyAction) => {
         case "OPEN_TORRENT_DOWNLOAD_DIALOG":
             return Object.assign({}, state, {
                 modals: Object.assign({}, state.modals, {
-                    torrentDownload: true,
+                    remoteDownload: true,
+                    remoteDownloadTorrent: action.selected,
                 }),
                 contextOpen: false,
             });
@@ -246,6 +253,15 @@ const viewUpdate = (state: ViewUpdateState = initState, action: AnyAction) => {
                 }),
                 contextOpen: false,
             });
+        case "OPEN_DIRECTORY_DOWNLOAD_DIALOG":
+            return Object.assign({}, state, {
+                modals: Object.assign({}, state.modals, {
+                    directoryDownloading: action.downloading,
+                    directoryDownloadLog: action.log,
+                    directoryDownloadDone: action.done,
+                }),
+                contextOpen: false,
+            });
         case "CLOSE_CONTEXT_MENU":
             return Object.assign({}, state, {
                 contextOpen: false,
@@ -261,7 +277,7 @@ const viewUpdate = (state: ViewUpdateState = initState, action: AnyAction) => {
                     share: false,
                     music: false,
                     remoteDownload: false,
-                    torrentDownload: false,
+                    remoteDownloadTorrent: null,
                     getSource: "",
                     resave: false,
                     copy: false,
@@ -269,6 +285,9 @@ const viewUpdate = (state: ViewUpdateState = initState, action: AnyAction) => {
                     compress: false,
                     decompress: false,
                     option: undefined,
+                    directoryDownloading: false,
+                    directoryDownloadLog: "",
+                    directoryDownloadDone: false,
                 }),
             });
         case "TOGGLE_SNACKBAR":

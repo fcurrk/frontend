@@ -8,7 +8,7 @@ i18n.use(Backend)
     .use(LanguageDetector)
     .use(initReactI18next)
     .init({
-        fallbackLng: "en-US",
+        fallbackLng: "zh-CN",
         debug: true,
         ns: ["common", "application"],
         load: "currentOnly",
@@ -17,5 +17,20 @@ i18n.use(Backend)
             escapeValue: false,
         },
     });
+
+i18n.on("languageChanged", (lng) => {
+    document.documentElement.setAttribute("lang", lng);
+});
+
+export const languages = [
+    {
+        code: "en-US",
+        displayName: "English",
+    },
+    {
+        code: "zh-CN",
+        displayName: "简体中文",
+    },
+];
 
 export default i18n;

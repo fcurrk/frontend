@@ -168,9 +168,10 @@ export const openRemoteDownloadDialog = () => {
         type: "OPEN_REMOTE_DOWNLOAD_DIALOG",
     };
 };
-export const openTorrentDownloadDialog = () => {
+export const openTorrentDownloadDialog = (selected) => {
     return {
         type: "OPEN_TORRENT_DOWNLOAD_DIALOG",
+        selected:selected,
     };
 };
 export const openDecompressDialog = () => {
@@ -279,5 +280,14 @@ export const setSiteConfig = (config) => {
     return {
         type: "SET_SITE_CONFIG",
         config: config,
+    };
+};
+
+export const openDirectoryDownloadDialog = (downloading, log, done) => {
+    return {
+        type: "OPEN_DIRECTORY_DOWNLOAD_DIALOG",
+        downloading,
+        log,
+        done,
     };
 };
