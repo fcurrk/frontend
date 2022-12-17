@@ -211,6 +211,7 @@
     "officePreviewServiceDes": "You can use following magic variables：",
     "officePreviewServiceSrcDes": "File URL",
     "officePreviewServiceSrcB64Des": " Base64 encoded file URL",
+    "officePreviewServiceName": "File name",
     "thumbnails": "Thumbnails",
     "localOnlyInfo": "The following settings only apply to local storage policies.",
     "thumbWidth": "Width",
@@ -382,7 +383,7 @@
     "createQiniuBucket": "Go to <0>Qiniu dashboard</0> to create a storage bucket.。",
     "enterQiniuBucket": "Enter the \"bucket name\" you just created:",
     "qiniuBucketName": "Bucket name",
-    "bucketTypeDes": "Select the type of bucket you just created. We recommend selecting \"Private bucket\" for higher security, private bucket does not support \"Get Source Link\" feature.",
+    "bucketTypeDes": "Select the type of bucket you just created. We recommend selecting \"Private bucket\" for higher security.",
     "privateBucket": "Private bucket",
     "publicBucket": "Public bucket",
     "bucketCDNDes": "Fill in the CDN-accelerated domain name you have bound for the storage bucket.",
@@ -390,7 +391,7 @@
     "qiniuCredentialDes": "Go to Personal Center - Credential Management in the Qiniu dashboard and fill in the obtained AK, SK.",
     "ak": "AK",
     "sk": "SK",
-    "cannotEnableForPrivateBucket": "This feature is not supported under private bucket.",
+    "cannotEnableForPrivateBucket": "If this feature is enabled for private bucket, you need to enable \"Use redirected source link\" for user groups.",
     "limitMimeType": "Do you want to limit MimeTypes of file that can be uploaded?",
     "mimeTypeDes": "Enter the MimeType of the allowed files, and separate multiple MimeTypes with a comma. Qiniu will detect the file content to determine the MimeType, and allow the upload if the MimeType is presented in your list.",
     "mimeTypeList": "MimeTypes list",
@@ -552,7 +553,10 @@
     "chunkSizeBytesDes": "Size of chunk for resumable uploads. Only supported in partial storage policy.",
     "placeHolderWithSize": "Use placeholder before uploading",
     "placeHolderWithSizeDes": "Whether to create a placeholder file before uploading .Only supported in partial storage policy.",
-    "saveChanges": "Save changes"
+    "saveChanges": "Save changes",
+    "s3EndpointPathStyle": "Select the format of the S3 Endpoint address, or if you don't know what to select, just leave to the default. Some third-party S3-compatible storage policies may require this option to work. When turned on, we will force to use of path-like format addresses, such as <0>http://s3.amazonaws.com/BUCKET/KEY</0>.",
+    "usePathEndpoint": "Force path style",
+    "useHostnameEndpoint": "Use host name if possible"
   },
   "node": {
     "#": "#",

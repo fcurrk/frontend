@@ -211,6 +211,7 @@
     "officePreviewServiceDes": "可使用以下替换变量：",
     "officePreviewServiceSrcDes": "文件 URL",
     "officePreviewServiceSrcB64Des": " Base64 编码后的文件 URL",
+    "officePreviewServiceName": "文件名",
     "thumbnails": "缩略图",
     "localOnlyInfo": "以下设置只针对本机存储策略有效。",
     "thumbWidth": "缩略图宽度",
@@ -382,7 +383,7 @@
     "createQiniuBucket": "前往 <0>七牛控制面板</0> 创建对象存储资源。",
     "enterQiniuBucket": "在下方填写您在七牛创建存储空间时指定的“存储空间名称”：",
     "qiniuBucketName": "存储空间名称",
-    "bucketTypeDes": "在下方选择您创建的空间类型，推荐选择“私有空间”以获得更高的安全性，私有空间无法开启“获取直链”功能。",
+    "bucketTypeDes": "在下方选择您创建的空间类型，推荐选择“私有空间”以获得更高的安全性。",
     "privateBucket": "私有",
     "publicBucket": "公有",
     "bucketCDNDes": "填写您为存储空间绑定的 CDN 加速域名。",
@@ -390,7 +391,7 @@
     "qiniuCredentialDes": "在七牛控制面板进入 个人中心 - 密钥管理，在下方填写获得到的 AK、SK。",
     "ak": "AK",
     "sk": "SK",
-    "cannotEnableForPrivateBucket": "私有空间无法开启此功能",
+    "cannotEnableForPrivateBucket": "私有空间开启外链功能后，还需要在用户组里设置开启“使用重定向的外链”，否则无法正常生成外链",
     "limitMimeType": "是否限制上传文件 MimeType？",
     "mimeTypeDes": "输入允许上传的 MimeType，多个请以半角逗号 , 隔开。七牛服务器会侦测文件内容以判断 MimeType，再用判断值跟指定值进行匹配，匹配成功则允许上传。",
     "mimeTypeList": "MimeType 列表",
@@ -552,7 +553,10 @@
     "chunkSizeBytesDes": "分片上传时单个分片的大小，仅部分存储策略支持",
     "placeHolderWithSize": "上传前预支用户存储",
     "placeHolderWithSizeDes": "是否在上传会话创建时就对用户存储进行预支，仅部分存储策略支持",
-    "saveChanges": "保存更改"
+    "saveChanges": "保存更改",
+    "s3EndpointPathStyle": "选择 S3 Endpoint 地址的格式，如果您不知道该选什么，保持默认即可。某些第三方 S3 兼容存储策略可能需要更改此选项。开启后，将会强制使用路径格式地址，比如 <0>http://s3.amazonaws.com/BUCKET/KEY</0>。",
+    "usePathEndpoint": "强制路径格式",
+    "useHostnameEndpoint": "主机名优先"
   },
   "node": {
     "#": "#",
