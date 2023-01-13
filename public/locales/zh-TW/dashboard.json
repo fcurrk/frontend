@@ -9,7 +9,7 @@
     "40043": "無法對初始用戶執行此操作",
     "40046": "無法對主機節點執行此操作",
     "40060": "從機無法向主機發送回調請求，請檢查主機端 參數設置 - 站點訊息 - 站點URL設置，並確保從機可以連接到此地址 ({{message}})",
-    "40061": "Cloudreve 版本不一致 ({{message}})",
+    "40061": "版本不一致 ({{message}})",
     "50008": "設置項更新失敗 ({{message}})",
     "50009": "跨域策略添加失敗"
   },
@@ -33,10 +33,10 @@
     "remoteDownload": "離線下載",
     "generalTasks": "常規任務",
     "title": "控制台",
-    "dashboard": "Cloudreve 控制台"
+    "dashboard": "控制台"
   },
   "summary": {
-    "newsletterError": "Cloudreve 公告載入失敗",
+    "newsletterError": "公告載入失敗",
     "confirmSiteURLTitle": "確定站點URL設置",
     "siteURLNotSet": "您尚未設定站點URL，是否要將其設定為當前的 {{current}} ?",
     "siteURLNotMatch": "您設置的站點URL與當前實際不一致，是否要將其設定為當前的 {{current}} ?",

@@ -441,6 +441,7 @@
     "pleaseManuallyCopy": "當前瀏覽器不支持，請手動複製",
     "webdavAccounts": "WebDAV 帳號管理",
     "webdavHint": "WebDAV的地址為：{{url}}；登錄使用者名稱統一為：{{name}} ；密碼為所創建帳號的密碼。",
+    "webdavPassword": "WebDAV密碼(4-16位)",
     "annotation": "備註名",
     "rootFolder": "相對根目錄",
     "createdAt": "創建日期",
