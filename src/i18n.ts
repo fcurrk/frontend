@@ -14,7 +14,7 @@ i18n.use(ChainedBackend)
     .use(LanguageDetector)
     .use(initReactI18next)
     .init({
-        fallbackLng: "zh-CN",
+        fallbackLng: "en-US",
         debug: true,
         ns: ["common", "application"],
         load: "currentOnly",
@@ -23,7 +23,10 @@ i18n.use(ChainedBackend)
             escapeValue: false,
         },
         backend: {
-            backends: [LocalStorageBackend, Backend],
+            backends:
+                process.env.NODE_ENV === "development"
+                    ? [Backend]
+                    : [LocalStorageBackend, Backend],
             backendOptions: [
                 {
                     expirationTime: 7 * 24 * 60 * 60 * 1000, // 7 days
@@ -47,6 +50,10 @@ export const languages = [
     {
         code: "zh-CN",
         displayName: "简体中文",
+    },
+    {
+        code: "zh-TW",
+        displayName: "繁體中文",
     },
 ];
 
