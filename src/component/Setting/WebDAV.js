@@ -23,6 +23,9 @@ import { toggleSnackbar } from "../../redux/explorer";
 import Nothing from "../Placeholder/Nothing";
 import { useTranslation } from "react-i18next";
 import AppPromotion from "./AppPromotion";
+import Tooltip from "@material-ui/core/Tooltip";
+import ToggleIcon from "material-ui-toggle-icon";
+import { Pencil, PencilOff } from "mdi-material-ui";
 
 const useStyles = makeStyles((theme) => ({
     layout: {
@@ -111,6 +114,22 @@ export default function WebDAV() {
             });
     };
 
+    const toggleAccountReadonly = (id) => {
+        const account = accounts[id];
+        API.patch("/webdav/accounts", {
+            id: account.ID,
+            readonly: !account.Readonly,
+        })
+            .then((response) => {
+                account.Readonly = response.data.readonly;
+                const accountCopy = [...accounts];
+                setAccounts(accountCopy);
+            })
+            .catch((error) => {
+                ToggleSnackbar("top", "right", error.message, "error");
+            });
+    };
+
     const addAccount = (account) => {
         setCreate(false);
         API.post("/webdav/accounts", {
@@ -126,6 +145,7 @@ export default function WebDAV() {
                         CreatedAt: response.data.created_at,
                         Name: account.name,
                         Root: account.path,
+                        Readonly: account.Readonly,
                     },
                     ...accounts,
                 ]);
@@ -187,7 +207,7 @@ export default function WebDAV() {
                                             <TableCell align="right">
                                                 {t("setting.createdAt")}
                                             </TableCell>
-                                            <TableCell align="right">
+                                            <TableCell align="center">
                                                 {t("setting.action")}
                                             </TableCell>
                                         </TableRow>
@@ -231,15 +251,61 @@ export default function WebDAV() {
                                                         )}
                                                     />
                                                 </TableCell>
-                                                <TableCell align="right">
-                                                    <IconButton
-                                                        size={"small"}
+                                                <TableCell align="center">
+                                                    <Tooltip
+                                                        placement="top"
+                                                        title={
+                                                            row.Readonly
+                                                                ? t(
+                                                                      "setting.readonlyOff"
+                                                                  )
+                                                                : t(
+                                                                      "setting.readonlyOn"
+                                                                  )
+                                                        }
+                                                        onClick={() =>
+                                                            toggleAccountReadonly(
+                                                                id
+                                                            )
+                                                        }
+                                                    >
+                                                        <IconButton>
+                                                            <ToggleIcon
+                                                                on={
+                                                                    row.Readonly
+                                                                }
+                                                                onIcon={
+                                                                    <PencilOff
+                                                                        fontSize={
+                                                                            "small"
+                                                                        }
+                                                                    />
+                                                                }
+                                                                offIcon={
+                                                                    <Pencil
+                                                                        fontSize={
+                                                                            "small"
+                                                                        }
+                                                                    />
+                                                                }
+                                                            />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                    <Tooltip
+                                                        placement="top"
+                                                        title={t(
+                                                            "setting.delete"
+                                                        )}
                                                         onClick={() =>
                                                             deleteAccount(id)
                                                         }
                                                     >
-                                                        <Delete />
-                                                    </IconButton>
+                                                        <IconButton
+                                                            fontSize={"small"}
+                                                        >
+                                                            <Delete />
+                                                        </IconButton>
+                                                    </Tooltip>
                                                 </TableCell>
                                             </TableRow>
                                         ))}

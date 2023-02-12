@@ -241,7 +241,12 @@
     "directoryDownloadError": "Error: {{msg}}",
     "directoryDownloadErrorNotification": "Error occurs while download {{name}}: {{msg}}",
     "directoryDownloadAutoscroll": "Auto scroll",
-    "directoryDownloadCancelled": "Download cancelled"
+    "directoryDownloadCancelled": "Download cancelled",
+    "advanceOptions": "Advanced options",
+    "forceDelete": "Force delete ",
+    "forceDeleteDes": "Force delete file records, regardless of whether the physical file was successfully deleted.",
+    "unlinkOnly": "Unlink only",
+    "unlinkOnlyDes": "Delete file records only, physical files will not be deleted."
   },
   "uploader": {
     "fileNotMatchError": "The selected file does not match the original file.",
@@ -448,6 +453,9 @@
     "rootFolder": "Relative root folder",
     "createdAt": "Created at",
     "action": "Action",
+    "readonlyOn": "Turn on readonly",
+    "readonlyOff": "Turn off readonly",
+    "delete": "Delete",
     "listEmpty": "No records.",
     "createNewAccount": "Create new account",
     "taskType": "Task type",

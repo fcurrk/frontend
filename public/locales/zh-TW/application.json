@@ -111,6 +111,7 @@
     "name": "名稱",
     "size": "大小",
     "lastModified": "修改日期",
+    "currentFolder": "當前目錄",
     "backToParentFolder": "上級目錄",
     "folders": "文件夾",
     "files": "文件",
@@ -240,7 +241,12 @@
     "directoryDownloadError": "遇到錯誤：{{msg}}",
     "directoryDownloadErrorNotification": "下載 {{name}} 遇到錯誤：{{msg}}",
     "directoryDownloadAutoscroll": "自動滾動",
-    "directoryDownloadCancelled": "已取消下載"
+    "directoryDownloadCancelled": "已取消下載",
+    "advanceOptions": "高級選項",
+    "forceDelete": "強制刪除文件",
+    "forceDeleteDes": "強制刪除文件記錄，無論物理文件是否被成功刪除",
+    "unlinkOnly": "僅解除鏈接",
+    "unlinkOnlyDes": "僅刪除文件記錄，物理文件不會被刪除"
   },
   "uploader": {
     "fileNotMatchError": "所選擇文件與原始文件不符",
@@ -446,6 +452,9 @@
     "rootFolder": "相對根目錄",
     "createdAt": "創建日期",
     "action": "操作",
+    "readonlyOn": "開啓只讀",
+    "readonlyOff": "關閉只讀",
+    "delete": "刪除",
     "listEmpty": "沒有記錄",
     "createNewAccount": "創建新帳號",
     "taskType": "任務類型",
